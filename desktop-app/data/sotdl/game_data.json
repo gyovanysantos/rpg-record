@@ -1,0 +1,84 @@
+{
+  "ancestries": [
+    {
+      "name": "Human",
+      "attributes": {"strength": 10, "agility": 10, "intellect": 10, "will": 10},
+      "speed": 10,
+      "size": "1",
+      "languages": ["Common"],
+      "traits": ["Determined (recover Fortune at end of each rest)"]
+    },
+    {
+      "name": "Changeling",
+      "attributes": {"strength": 9, "agility": 10, "intellect": 10, "will": 10},
+      "speed": 10,
+      "size": "1",
+      "languages": ["Common"],
+      "traits": ["Steal Identity (assume humanoid form)", "Shadowsight"]
+    },
+    {
+      "name": "Clockwork",
+      "attributes": {"strength": 10, "agility": 10, "intellect": 9, "will": 9},
+      "speed": 8,
+      "size": "1",
+      "languages": ["Common"],
+      "traits": ["Machine (immune to disease, poison; no eating/breathing)", "Key-wound (24-hour wind)"]
+    },
+    {
+      "name": "Dwarf",
+      "attributes": {"strength": 10, "agility": 9, "intellect": 10, "will": 10},
+      "speed": 8,
+      "size": "1/2",
+      "languages": ["Common", "Dwarvish"],
+      "traits": ["Darksight", "Hatred (1 boon vs chosen creature)", "Robust Constitution"]
+    },
+    {
+      "name": "Goblin",
+      "attributes": {"strength": 8, "agility": 12, "intellect": 10, "will": 9},
+      "speed": 10,
+      "size": "1/2",
+      "languages": ["Common", "Elvish"],
+      "traits": ["Shadowsight", "Iron Vulnerability", "Sneaky (+1 boon stealth)"]
+    },
+    {
+      "name": "Orc",
+      "attributes": {"strength": 12, "agility": 10, "intellect": 9, "will": 9},
+      "speed": 12,
+      "size": "1",
+      "languages": ["Common", "Dark Speech"],
+      "traits": ["Darksight", "Rising Fury (boon on attack when injured)", "Shadowsight"]
+    }
+  ],
+  "novice_paths": [
+    {"name": "Warrior", "attribute_bonuses": {"strength": 2}, "health_bonus": 5},
+    {"name": "Magician", "attribute_bonuses": {"intellect": 1, "will": 1}, "health_bonus": 2, "power_bonus": 1},
+    {"name": "Priest", "attribute_bonuses": {"will": 2}, "health_bonus": 3, "power_bonus": 1},
+    {"name": "Rogue", "attribute_bonuses": {"agility": 2}, "health_bonus": 3}
+  ],
+  "expert_paths": [
+    "Artificer", "Assassin", "Berserker", "Cleric", "Druid", "Fighter",
+    "Oracle", "Paladin", "Ranger", "Scout", "Sorcerer", "Spellbinder",
+    "Thief", "Warlock", "Witch", "Wizard"
+  ],
+  "master_paths": [
+    "Abjurer", "Acrobat", "Aeromancer", "Apocalyptist", "Arcanist", "Astromancer",
+    "Avenger", "Bard", "Blade", "Brute", "Cavalier", "Champion",
+    "Chronomancer", "Conqueror", "Defender", "Destroyer", "Diplomat",
+    "Enchantress", "Engineer", "Executioner", "Explorer",
+    "Geomancer", "Gladiator", "Gunslinger", "Healer", "Hexer",
+    "Hydromancer", "Illusionist", "Infiltrator", "Inquisitor", "Jack-of-All-Trades",
+    "Mage Knight", "Marauder", "Miracle Worker", "Monk", "Mystic",
+    "Necromancer", "Poisoner", "Pyromancer", "Runesmith",
+    "Savant", "Sentinel", "Shapeshifter", "Sharpshooter", "Stormbringer",
+    "Technomancer", "Templar", "Transmuter", "Traveler", "Zealot"
+  ],
+  "spell_traditions": [
+    "Air", "Alteration", "Arcana", "Battle", "Celestial",
+    "Chaos", "Conjuration", "Curse", "Demonology", "Destruction",
+    "Divination", "Earth", "Enchantment", "Fey", "Fire",
+    "Forbidden", "Illusion", "Life", "Metal", "Nature",
+    "Necromancy", "Protection", "Rune", "Shadow", "Song",
+    "Soul", "Storm", "Technomancy", "Teleportation", "Theurgy",
+    "Time", "Transformation", "Water"
+  ]
+}

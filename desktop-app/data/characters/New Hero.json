@@ -1,0 +1,30 @@
+{
+  "name": "New Hero",
+  "ancestry": "Orc",
+  "level": 0,
+  "novice_path": "",
+  "expert_path": "Artificer",
+  "master_path": "Abjurer",
+  "strength": 10,
+  "agility": 12,
+  "intellect": 7,
+  "will": 14,
+  "health_bonus": 0,
+  "defense_bonus": 2,
+  "speed_base": 12,
+  "size": "1",
+  "perception_bonus": -5,
+  "power": 0,
+  "damage_taken": 0,
+  "insanity": 1,
+  "corruption": 0,
+  "fortune": true,
+  "languages": [
+    "Common"
+  ],
+  "professions": [],
+  "talents": [],
+  "spells": [],
+  "equipment": [],
+  "notes": ""
+}
