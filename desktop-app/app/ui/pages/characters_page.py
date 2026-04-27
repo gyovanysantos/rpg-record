@@ -10,6 +10,7 @@ Right panel: full character sheet editor with tabbed sections:
 """
 
 import json
+import sys
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -25,8 +26,11 @@ from app.models.character import (
     Character, save_character, load_character, list_characters,
 )
 
-# Load SotDL game data
-_DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "sotdl"
+# Load SotDL game data (bundled read-only asset)
+if getattr(sys, "frozen", False):
+    _DATA_DIR = Path(sys._MEIPASS) / "data" / "sotdl"
+else:
+    _DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data" / "sotdl"
 _GAME_DATA = {}
 _game_data_file = _DATA_DIR / "game_data.json"
 if _game_data_file.exists():

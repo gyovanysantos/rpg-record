@@ -29,10 +29,12 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-# Add repo root for importing original modules
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+# When running from source, add repo root for importing original modules.
+# When frozen (PyInstaller .exe), those modules are already bundled.
+if not getattr(sys, "frozen", False):
+    _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+    if str(_REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT))
 
 from recorder import list_devices
 from config import get_active_players

@@ -6,12 +6,17 @@ audio settings, and session directory helpers.
 """
 
 import os
+import sys
 from datetime import date
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+# When frozen, look for .env next to the .exe
+if getattr(sys, "frozen", False):
+    load_dotenv(Path(sys.executable).resolve().parent / ".env")
+else:
+    load_dotenv()
 
 # --- API Keys (loaded from .env) ---
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
@@ -40,7 +45,11 @@ SILENCE_THRESH = -40      # dBFS threshold for silence detection
 SILENCE_PADDING = 300     # milliseconds of padding to keep around speech
 
 # --- Session Directory ---
-SESSIONS_DIR = Path(__file__).parent / "sessions"
+# When frozen (.exe), store sessions next to the executable.
+if getattr(sys, "frozen", False):
+    SESSIONS_DIR = Path(sys.executable).resolve().parent / "sessions"
+else:
+    SESSIONS_DIR = Path(__file__).parent / "sessions"
 
 
 def get_session_dir() -> Path:

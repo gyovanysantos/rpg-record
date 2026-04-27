@@ -10,9 +10,12 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, Signal
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+# When running from source, add repo root to import original modules.
+# When frozen (PyInstaller .exe), those modules are already bundled.
+if not getattr(sys, "frozen", False):
+    _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+    if str(_REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT))
 
 from processor import process_session
 from transcriber import transcribe_session

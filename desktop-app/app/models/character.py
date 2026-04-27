@@ -11,10 +11,17 @@ Covers the full SotDL character sheet:
 """
 
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CHARACTERS_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "characters"
+# When frozen (.exe), store user data next to the executable so it persists.
+# When running from source, use the normal desktop-app/data/ directory.
+if getattr(sys, "frozen", False):
+    _APP_DIR = Path(sys.executable).resolve().parent
+else:
+    _APP_DIR = Path(__file__).resolve().parent.parent.parent
+CHARACTERS_DIR = _APP_DIR / "data" / "characters"
 
 
 @dataclass

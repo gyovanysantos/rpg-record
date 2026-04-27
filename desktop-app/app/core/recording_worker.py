@@ -13,10 +13,12 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
-# Add the root repo to sys.path so we can import the original modules
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+# When running from source, add repo root to import original modules.
+# When frozen (PyInstaller .exe), those modules are already bundled.
+if not getattr(sys, "frozen", False):
+    _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+    if str(_REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(_REPO_ROOT))
 
 from recorder import Recorder, list_devices, select_device
 from config import get_session_dir, get_active_players, SAMPLE_RATE

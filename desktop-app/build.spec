@@ -19,11 +19,14 @@ for _line in _version_file.read_text().splitlines():
         break
 
 block_cipher = None
-BASE = Path(".")
+# MUST use .resolve() so PyInstaller gets absolute paths —
+# relative "." / ".." silently fail to locate root-level modules.
+BASE = Path(".").resolve()
+REPO_ROOT = BASE.parent
 
 a = Analysis(
     ["main.py"],
-    pathex=[str(BASE)],
+    pathex=[str(BASE), str(REPO_ROOT)],
     binaries=[],
     datas=[
         (str(BASE / "assets"), "assets"),
@@ -34,11 +37,35 @@ a = Analysis(
         "PySide6.QtCore",
         "PySide6.QtGui",
         "PySide6.QtMultimedia",
+        # Root-level modules (repo root, outside desktop-app/)
+        "recorder",
+        "config",
+        "processor",
+        "transcriber",
+        "merger",
+        "summarizer",
     ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        # ── Heavy packages NOT used by the desktop app ──
+        "torch", "torchvision", "torchaudio",
+        "tensorflow", "tensorboard", "keras",
+        "pandas", "pandas.io",
+        "boto3", "botocore", "s3transfer",
+        "sqlalchemy",
+        "numba", "llvmlite",
+        "matplotlib", "mpl_toolkits",
+        "PIL", "Pillow",
+        "uvicorn", "starlette", "fastapi",
+        "opentelemetry",
+        "gradio",                    # old web UI, not needed in .exe
+        "IPython", "ipykernel", "ipywidgets", "jupyter",
+        "pytest",
+        "setuptools", "pip", "wheel",
+        "tkinter", "_tkinter",
+    ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

@@ -12,12 +12,16 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 
-# Add the root repo to sys.path so desktop-app modules can import
-# recorder.py, config.py, processor.py, etc. from the parent folder.
-BASE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BASE_DIR.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+# When running from source, add the repo root to sys.path so we can
+# import recorder.py, config.py, etc. from the parent folder.
+# When frozen (PyInstaller .exe), those modules are already bundled.
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    REPO_ROOT = BASE_DIR.parent
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
 
 from app.ui.role_picker import RolePickerDialog
 from app.ui.main_window import MainWindow

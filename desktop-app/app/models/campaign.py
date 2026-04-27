@@ -8,14 +8,21 @@ This module scans both to build the dashboard view.
 
 import json
 import os
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-# Repo root — where sessions/ lives
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+# When frozen (.exe), store user data next to the executable so it persists.
+# When running from source, use the normal directory layout.
+if getattr(sys, "frozen", False):
+    _APP_DIR = Path(sys.executable).resolve().parent
+    _REPO_ROOT = _APP_DIR
+else:
+    _APP_DIR = Path(__file__).resolve().parent.parent.parent
+    _REPO_ROOT = _APP_DIR.parent
 SESSIONS_DIR = _REPO_ROOT / "sessions"
-CAMPAIGNS_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "campaigns"
+CAMPAIGNS_DIR = _APP_DIR / "data" / "campaigns"
 
 
 @dataclass

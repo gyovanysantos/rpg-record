@@ -10,11 +10,15 @@ made in the Settings page are immediately available everywhere.
 """
 
 import os
+import sys
 from pathlib import Path
 
 # ── .env file location ──────────────────────────────────────────
-
-_ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+# When frozen (.exe), look for .env next to the executable.
+if getattr(sys, "frozen", False):
+    _ENV_PATH = Path(sys.executable).resolve().parent / ".env"
+else:
+    _ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
 
 # ── AI Service Definitions ──────────────────────────────────────
 
