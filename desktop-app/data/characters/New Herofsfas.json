@@ -1,5 +1,5 @@
 {
-  "name": "New Hero",
+  "name": "New Herofsfas",
   "ancestry": "Orc",
   "level": 0,
   "novice_path": "",
@@ -23,7 +23,9 @@
     "Common"
   ],
   "professions": [],
-  "talents": [],
+  "talents": [
+    "fsafs"
+  ],
   "spells": [],
   "equipment": [],
   "notes": ""

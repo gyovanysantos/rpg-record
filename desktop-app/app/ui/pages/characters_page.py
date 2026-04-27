@@ -46,6 +46,8 @@ class CharactersPage(QWidget):
         self._current_char: Character | None = None
         self._current_path: Path | None = None
         self._loading = False  # prevent save-during-load loops
+        self._stats_locked = True  # stats locked until Edit clicked
+        self._lockable_widgets: list[QWidget] = []  # populated in _build_sheet
         self._build_ui()
         self._refresh_list()
 
@@ -105,6 +107,7 @@ class CharactersPage(QWidget):
         self._sheet_layout.setSpacing(12)
 
         self._build_sheet()
+        self._set_stats_locked(True)  # start locked
 
         self._sheet_scroll.setWidget(self._sheet_widget)
         splitter.addWidget(self._sheet_scroll)
@@ -169,6 +172,14 @@ class CharactersPage(QWidget):
         ig.addWidget(self._master_combo, 3, 1)
 
         lay.addWidget(identity_group)
+
+        # ── Edit / Lock Toggle ─────────────────────────────────
+        self._edit_btn = QPushButton("🔓 Edit Stats")
+        self._edit_btn.setObjectName("primary")
+        self._edit_btn.setCheckable(True)
+        self._edit_btn.setChecked(False)
+        self._edit_btn.toggled.connect(self._toggle_stats_lock)
+        lay.addWidget(self._edit_btn)
 
         # ── Attributes ──────────────────────────────────────────
         attr_group = QGroupBox("Attributes")
@@ -287,6 +298,20 @@ class CharactersPage(QWidget):
         dg.addWidget(self._fortune_check, 1, 2, 1, 2)
 
         lay.addWidget(dark_group)
+
+        # Register all lockable stat widgets
+        self._lockable_widgets = [
+            self._name_edit, self._level_spin, self._ancestry_combo,
+            self._size_edit, self._novice_combo, self._expert_combo,
+            self._master_combo,
+            self._attr_spins["strength"], self._attr_spins["agility"],
+            self._attr_spins["intellect"], self._attr_spins["will"],
+            self._damage_spin, self._health_bonus_spin,
+            self._defense_bonus_spin, self._speed_spin,
+            self._perception_bonus_spin,
+            self._corruption_spin, self._insanity_spin,
+            self._power_spin, self._fortune_check,
+        ]
 
         # ── Tabs: Talents / Spells / Equipment / Notes ──────────
         tabs = QTabWidget()
@@ -558,6 +583,22 @@ class CharactersPage(QWidget):
 
     def _on_damage_changed(self):
         self._auto_save()
+
+    # ── Stats Lock / Unlock ──────────────────────────────────
+
+    def _set_stats_locked(self, locked: bool):
+        """Enable or disable all stat widgets above the tabs."""
+        self._stats_locked = locked
+        for w in self._lockable_widgets:
+            w.setEnabled(not locked)
+        if locked:
+            self._edit_btn.setText("🔓 Edit Stats")
+        else:
+            self._edit_btn.setText("🔒 Lock Stats")
+
+    def _toggle_stats_lock(self, checked: bool):
+        """Toggle button handler — checked means editing."""
+        self._set_stats_locked(not checked)
 
     def _on_ancestry_changed(self, ancestry_name: str):
         """When ancestry changes, apply default attributes if creating new."""
