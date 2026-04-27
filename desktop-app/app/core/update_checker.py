@@ -27,9 +27,8 @@ from PySide6.QtCore import QObject, Signal, QThread
 from app.__version__ import __version__
 
 # ── Configuration ───────────────────────────────────────────────
-# Replace this with your actual Gist raw URL after creating the Gist.
-# Format: https://gist.githubusercontent.com/<user>/<gist_id>/raw/rpg-record-version.json
-UPDATE_URL = ""
+# Public Gist raw URL — always fetches the latest revision.
+UPDATE_URL = "https://gist.githubusercontent.com/gyovanysantos/f99c9586b16ac3c51bce90714f8c178d/raw/rpg-record-version.json"
 
 # How long to wait for the server (seconds)
 _TIMEOUT = 5
