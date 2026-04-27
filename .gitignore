@@ -30,3 +30,9 @@ dist/
 build/
 *.exe
 *.spec.bak
+
+# PDF books (copyrighted)
+*.pdf
+
+# User data (generated at runtime)
+desktop-app/data/characters/

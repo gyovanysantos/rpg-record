@@ -44,6 +44,7 @@ class Character:
 
     # ── Derived / Overrideable Stats ───────────────────────────
     health_bonus: int = 0      # extra HP from paths/talents
+    healing_rate_bonus: int = 0  # extra healing rate from paths/talents
     defense_bonus: int = 0     # armor/shield/talent bonuses
     speed_base: int = 10
     size: str = "1"            # 1 for most, 1/2 for small, 2 for large
@@ -64,7 +65,9 @@ class Character:
     talents: list[str] = field(default_factory=list)
     spells: list[dict] = field(default_factory=list)  # {"name", "tradition", "rank", "description"}
     equipment: list[str] = field(default_factory=list)
+    invocations: list[dict] = field(default_factory=list)  # SotDL creature stat blocks: {"name", "difficulty", "creature_type", "size", "perception", "defense", "health", "strength", "agility", "intellect", "will", "speed", "traits", "immunities", "attack_options", "special_attacks", "description"}
     notes: str = ""
+    portrait: str = ""  # filename or relative path to portrait image
 
     # ── Computed Properties ─────────────────────────────────────
 
@@ -90,7 +93,7 @@ class Character:
 
     @property
     def healing_rate(self) -> int:
-        return max(1, self.health // 4)
+        return max(1, self.health // 4 + self.healing_rate_bonus)
 
     @property
     def defense(self) -> int:
@@ -127,6 +130,7 @@ class Character:
             "intellect": self.intellect,
             "will": self.will,
             "health_bonus": self.health_bonus,
+            "healing_rate_bonus": self.healing_rate_bonus,
             "defense_bonus": self.defense_bonus,
             "speed_base": self.speed_base,
             "size": self.size,
@@ -141,7 +145,9 @@ class Character:
             "talents": self.talents,
             "spells": self.spells,
             "equipment": self.equipment,
+            "invocations": self.invocations,
             "notes": self.notes,
+            "portrait": self.portrait,
         }
 
     @classmethod
