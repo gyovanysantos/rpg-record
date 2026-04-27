@@ -50,8 +50,9 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    [],
-    exclude_binaries=True,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
     name=f"SotDL-RPG-Recorder-v{_version}",
     debug=False,
     bootloader_ignore_signals=False,
@@ -59,15 +60,4 @@ exe = EXE(
     upx=True,
     console=False,  # No console window — pure GUI
     icon=None,      # TODO: Add .ico file
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="SotDL-RPG-Recorder",
 )
