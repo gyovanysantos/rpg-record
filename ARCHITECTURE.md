@@ -101,7 +101,9 @@ desktop-app/
 │   ├── core/
 │   │   ├── recording_worker.py ← QTimer-based level polling + recording lifecycle
 │   │   ├── pipeline_worker.py  ← QThread for process → transcribe → merge → summarize
-│   │   └── narrator_worker.py  ← Gemini TTS narration engine (script + audio generation)
+│   │   ├── narrator_worker.py  ← Gemini TTS narration engine (script + audio generation)
+│   │   ├── settings_manager.py ← Centralized .env read/write for AI service settings
+│   │   └── update_checker.py   ← Background version check against remote version.json
 │   ├── models/
 │   │   ├── campaign.py      ← Session scanning, campaign CRUD, SessionInfo/Campaign dataclasses
 │   │   └── character.py     ← SotDL Character dataclass, save/load/list, derived stats
@@ -117,7 +119,8 @@ desktop-app/
 │       │   ├── dice_page.py       ← d20 + boons/banes roller with history
 │       │   ├── initiative_page.py ← Fast/Slow turn tracker with combatant cards
 │       │   ├── transcript_page.py ← Color-coded transcript viewer with search + export
-│       │   └── narrator_page.py   ← Gemini TTS cinematic narration with audio player
+│       │   ├── narrator_page.py   ← Gemini TTS cinematic narration with audio player
+│       │   └── settings_page.py   ← AI service configuration (API keys, models, test)
 │       └── widgets/
 │           └── player_card.py  ← Player name + custom-painted LevelBar meter
 └── data/
@@ -143,7 +146,8 @@ main.py
               ├── CharactersPage   ← Phase 4
               ├── InitiativePage   ← Phase 5
               ├── DicePage         ← Phase 5
-              └── NarratorPage     ← Phase 7 (DM only)
+              ├── NarratorPage     ← Phase 7 (DM only)
+              └── SettingsPage     ← Phase 8 (DM only)
 ```
 
 ### Role System
@@ -160,7 +164,8 @@ main.py
 | 5 | RPG Tools (dice + initiative) | ✅ Complete |
 | 6 | Transcript Viewer & Sharing | ✅ Complete |
 | 7 | Gemini TTS Narration | ✅ Complete |
-| 8 | Polish & PyInstaller Packaging | 🔲 Planned |
+| 8 | Settings Page (AI services) | ✅ Complete |
+| 9 | Distribution Pipeline (.exe + updates) | ✅ Complete |
   - Player name fields
   - Live audio level indicators
   - Sequential action buttons: Start → Stop & Process → Transcribe → Merge → Summarize
@@ -191,3 +196,36 @@ summary.md  (narrative summary, timeline, lore, characters, cliffhangers)
 |---------|---------------------|----------|--------------------|
 | Laptop  | Built-in mic        | 1        | Development/testing |
 | Focusrite | Scarlett 6i6 USB  | 5        | Production sessions |
+
+## Distribution Pipeline
+
+### Version System
+- Single source of truth: `desktop-app/app/__version__.py`
+- Displayed in status bar: `v0.1.0`
+- Read dynamically by `build.spec` to name the `.exe`
+
+### Update Checker
+- `update_checker.py` runs a background QThread on app start
+- Fetches `version.json` from a public GitHub Gist (URL in `UPDATE_URL` constant)
+- Compares remote vs local version; shows "Download" dialog if newer
+- Silently fails on network errors (non-blocking)
+
+### Release Workflow
+```
+Developer                           GitHub Actions
+    │                                    │
+    ├─ Bump __version__.py               │
+    ├─ git commit + git tag v0.2.0       │
+    ├─ git push --tags ──────────────────┤
+    │                                    ├─ Checkout code
+    │                                    ├─ Setup Python 3.12
+    │                                    ├─ Install deps + ffmpeg
+    │                                    ├─ PyInstaller build
+    │                                    └─ Create GitHub Release + .exe asset
+    │                                    │
+    └── Friends download from Releases ◄─┘
+```
+
+### Local Build
+- `scripts/build.ps1` — PowerShell script for local `.exe` builds
+- Installs deps, runs PyInstaller, reports output path and size

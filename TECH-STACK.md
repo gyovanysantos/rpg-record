@@ -48,3 +48,16 @@
 
 ## google-genai 1.73.1
 **Why:** Official Google Gen AI Python SDK. Used for Gemini TTS (text-to-speech) to generate cinematic narration audio from session summaries. Two-step pipeline: (1) Gemini text model transforms summaries into dramatic scripts, (2) Gemini TTS model (`gemini-2.5-flash-preview-tts`) converts scripts to WAV audio with configurable voices and styles. Supports 30 prebuilt voices, audio style tags, and advanced prompting with scene/director/character profiles.
+
+---
+
+# Distribution & CI/CD
+
+## GitHub Actions
+**Why:** Automated build-and-release pipeline. On `v*` tag push, builds the `.exe` on a Windows runner and creates a GitHub Release with the binary attached. No manual packaging needed — just tag and push.
+
+## GitHub CLI (gh) 2.89.0
+**Why:** Used during initial repo setup to create the remote repository and push. Also useful for checking releases from the command line.
+
+## urllib (stdlib)
+**Why:** Used in `update_checker.py` to fetch a remote `version.json` from a public GitHub Gist. No external HTTP library needed — stdlib keeps the dependency count low.
