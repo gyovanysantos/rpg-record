@@ -10,6 +10,14 @@ Build with:
 import sys
 from pathlib import Path
 
+# Read version from source
+_version_file = Path("app/__version__.py")
+_version = "0.0.0"
+for _line in _version_file.read_text().splitlines():
+    if _line.startswith("__version__"):
+        _version = _line.split('"')[1]
+        break
+
 block_cipher = None
 BASE = Path(".")
 
@@ -44,13 +52,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="SotDL-RPG-Recorder",
+    name=f"SotDL-RPG-Recorder-v{_version}",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,  # No console window — pure GUI
-    icon=None,      # TODO: Add .ico file in Phase 8
+    icon=None,      # TODO: Add .ico file
 )
 
 coll = COLLECT(

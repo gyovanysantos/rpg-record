@@ -16,10 +16,13 @@ on the user's chosen role (DM sees everything, Player sees a subset).
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QStackedWidget, QStatusBar,
+    QMessageBox,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices
 
 from app.ui.sidebar import Sidebar
+from app.__version__ import __version__
 from app.ui.pages.narrator_page import NarratorPage
 from app.ui.pages.transcript_page import TranscriptPage
 from app.ui.pages.dice_page import DicePage
@@ -28,6 +31,7 @@ from app.ui.pages.characters_page import CharactersPage
 from app.ui.pages.dashboard_page import DashboardPage
 from app.ui.pages.recorder_page import RecorderPage
 from app.ui.pages.settings_page import SettingsPage
+from app.core.update_checker import check_for_updates
 
 
 class MainWindow(QMainWindow):
@@ -44,6 +48,9 @@ class MainWindow(QMainWindow):
 
         # Start on dashboard
         self._sidebar.select("dashboard")
+
+        # Background update check (non-blocking)
+        check_for_updates(self, self._on_update_available)
 
     # ── UI Construction ─────────────────────────────────────────
 
@@ -80,7 +87,9 @@ class MainWindow(QMainWindow):
         # Status bar
         status = QStatusBar()
         role_display = "Dungeon Master" if self._role == "dm" else "Player"
-        status.showMessage(f"Role: {role_display}  |  Shadow of the Demon Lord")
+        status.showMessage(
+            f"Role: {role_display}  |  Shadow of the Demon Lord  |  v{__version__}"
+        )
         self.setStatusBar(status)
 
     def _add_page(self, key: str, page: QWidget):
@@ -93,3 +102,21 @@ class MainWindow(QMainWindow):
         page = self._pages.get(key)
         if page:
             self._stack.setCurrentWidget(page)
+
+    def _on_update_available(self, info):
+        """Show a dialog when a newer version is found."""
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Update Available")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(
+            f"🆕  Version {info.latest_version} is available!\n"
+            f"You are running v{info.current_version}."
+        )
+        if info.notes:
+            msg.setInformativeText(info.notes)
+        msg.setStandardButtons(QMessageBox.Open | QMessageBox.Cancel)
+        msg.button(QMessageBox.Open).setText("Download")
+        msg.button(QMessageBox.Cancel).setText("Skip")
+
+        if msg.exec() == QMessageBox.Open and info.download_url:
+            QDesktopServices.openUrl(QUrl(info.download_url))

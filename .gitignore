@@ -24,3 +24,9 @@ Thumbs.db
 
 # Session recordings (large audio files)
 sessions/
+
+# PyInstaller build artifacts
+dist/
+build/
+*.exe
+*.spec.bak
