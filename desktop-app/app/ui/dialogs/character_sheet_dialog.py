@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QTabWidget, QGridLayout, QCheckBox, QProgressBar,
     QMessageBox, QWidget, QSizePolicy, QFileDialog,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QEvent
 from PySide6.QtGui import QPixmap, QIcon
 
 import shutil
@@ -617,6 +617,10 @@ class CharacterSheetDialog(QDialog):
 
     def _build_tabs(self, lay: QVBoxLayout):
         tabs = QTabWidget()
+        self._tabs = tabs
+
+        # Install double-click handler on the tab bar
+        tabs.tabBar().installEventFilter(self)
 
         # Talents
         t = QWidget()
@@ -684,6 +688,43 @@ class CharacterSheetDialog(QDialog):
         tabs.addTab(inv, "🔮 Invocations")
 
         lay.addWidget(tabs, stretch=1)
+
+    # ── Tab Pop-Out ─────────────────────────────────────────────
+
+    def eventFilter(self, obj, event):
+        """Detect double-click on tab bar to pop out a tab into its own window."""
+        if obj is self._tabs.tabBar() and event.type() == QEvent.Type.MouseButtonDblClick:
+            idx = self._tabs.tabBar().tabAt(event.pos())
+            if idx >= 0:
+                self._pop_out_tab(idx)
+                return True
+        return super().eventFilter(obj, event)
+
+    def _pop_out_tab(self, index: int):
+        """Remove the tab at *index* and show its content in a separate dialog."""
+        widget = self._tabs.widget(index)
+        label = self._tabs.tabText(index)
+        icon = self._tabs.tabIcon(index)
+
+        # Remove from tab widget (doesn't delete the widget)
+        self._tabs.removeTab(index)
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle(label)
+        dlg.resize(700, 500)
+        lay = QVBoxLayout(dlg)
+        lay.setContentsMargins(8, 8, 8, 8)
+        lay.addWidget(widget)
+        widget.show()  # Ensure visible after reparenting
+
+        # When dialog closes, put the tab back
+        def _restore():
+            # Re-parent back to the tab widget
+            self._tabs.insertTab(index, widget, icon, label)
+            self._tabs.setCurrentIndex(index)
+
+        dlg.finished.connect(_restore)
+        dlg.show()
 
     # ── Invocations Tab ─────────────────────────────────────────
 
