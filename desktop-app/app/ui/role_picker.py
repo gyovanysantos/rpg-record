@@ -19,7 +19,9 @@ class RolePickerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Shadow of the Demon Lord — Choose Your Role")
         self.setFixedSize(600, 400)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(
+            Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+        )
 
         self._role = None  # Will be "dm" or "player"
         self._build_ui()
