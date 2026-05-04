@@ -62,10 +62,11 @@ class Character:
     # ── Lists ──────────────────────────────────────────────────
     languages: list[str] = field(default_factory=lambda: ["Common"])
     professions: list[str] = field(default_factory=list)
-    talents: list[str] = field(default_factory=list)
+    talents: list[dict] = field(default_factory=list)  # {"name", "description", "level"}
     spells: list[dict] = field(default_factory=list)  # {"name", "tradition", "rank", "description"}
-    equipment: list[str] = field(default_factory=list)
+    equipment: list[dict] = field(default_factory=list)  # {"name", "category", "equipped", "description"}
     invocations: list[dict] = field(default_factory=list)  # SotDL creature stat blocks: {"name", "difficulty", "creature_type", "size", "perception", "defense", "health", "strength", "agility", "intellect", "will", "speed", "traits", "immunities", "attack_options", "special_attacks", "description"}
+    gold: int = 0  # currency
     notes: str = ""
     portrait: str = ""  # filename or relative path to portrait image
 
@@ -146,12 +147,19 @@ class Character:
             "spells": self.spells,
             "equipment": self.equipment,
             "invocations": self.invocations,
+            "gold": self.gold,
             "notes": self.notes,
             "portrait": self.portrait,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "Character":
+        # Migrate old list[str] talents to list[dict]
+        if "talents" in data and data["talents"] and isinstance(data["talents"][0], str):
+            data["talents"] = [{"name": t, "description": "", "level": 0} for t in data["talents"] if t.strip()]
+        # Migrate old list[str] equipment to list[dict]
+        if "equipment" in data and data["equipment"] and isinstance(data["equipment"][0], str):
+            data["equipment"] = [{"name": e, "category": "Outro", "equipped": False, "description": ""} for e in data["equipment"] if e.strip()]
         return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
 
 

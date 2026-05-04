@@ -39,6 +39,12 @@ _creatures_file = _DATA_DIR / "creatures.json"
 if _creatures_file.exists():
     _CREATURES = json.loads(_creatures_file.read_text(encoding="utf-8"))
 
+# Pre-filled spell database
+_SPELLS: list[dict] = []
+_spells_file = _DATA_DIR / "spells.json"
+if _spells_file.exists():
+    _SPELLS = json.loads(_spells_file.read_text(encoding="utf-8"))
+
 # Pre-suggested hero portraits (bundled read-only)
 if getattr(sys, "frozen", False):
     _PORTRAITS_DIR = Path(sys._MEIPASS) / "data" / "portraits"
@@ -286,6 +292,159 @@ class InvocationEditorDialog(QDialog):
         }
 
 
+class TalentEditorDialog(QDialog):
+    """Dialog for editing a single talent."""
+
+    def __init__(self, talent: dict, parent=None):
+        super().__init__(parent)
+        self._tal = talent
+        self.setWindowTitle(f"Edit Talent — {talent.get('name', 'New')}")
+        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
+        self.setMinimumSize(500, 350)
+        self.resize(550, 400)
+        self._build_ui()
+        self._load_data()
+
+    def _build_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setSpacing(12)
+
+        g = QGridLayout()
+        g.setSpacing(10)
+
+        g.addWidget(QLabel("Nome:"), 0, 0)
+        self._name = QLineEdit()
+        self._name.setMinimumHeight(36)
+        self._name.setPlaceholderText("Nome do talento")
+        g.addWidget(self._name, 0, 1, 1, 3)
+
+        g.addWidget(QLabel("Nível:"), 1, 0)
+        self._level = QSpinBox()
+        self._level.setRange(0, 10)
+        self._level.setMinimumHeight(36)
+        self._level.setMinimumWidth(80)
+        g.addWidget(self._level, 1, 1)
+
+        g.addWidget(QLabel("Descrição:"), 2, 0, Qt.AlignTop)
+        self._desc = QTextEdit()
+        self._desc.setMinimumHeight(120)
+        self._desc.setPlaceholderText("Descreva o que este talento faz...")
+        g.addWidget(self._desc, 2, 1, 1, 3)
+
+        lay.addLayout(g, stretch=1)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        ok_btn = QPushButton("✔ Salvar")
+        ok_btn.setObjectName("primary")
+        ok_btn.setMinimumHeight(36)
+        ok_btn.setMinimumWidth(120)
+        ok_btn.clicked.connect(self.accept)
+        btn_row.addWidget(ok_btn)
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.setMinimumHeight(36)
+        cancel_btn.setMinimumWidth(100)
+        cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(cancel_btn)
+        lay.addLayout(btn_row)
+
+    def _load_data(self):
+        self._name.setText(self._tal.get("name", ""))
+        self._level.setValue(self._tal.get("level", 0))
+        self._desc.setPlainText(self._tal.get("description", ""))
+
+    def get_data(self) -> dict:
+        return {
+            "name": self._name.text(),
+            "level": self._level.value(),
+            "description": self._desc.toPlainText(),
+        }
+
+
+_EQUIP_CATEGORIES = [
+    "Arma", "Armadura", "Escudo", "Acessório", "Consumível", "Outro"
+]
+
+
+class EquipmentEditorDialog(QDialog):
+    """Dialog for editing a single equipment item."""
+
+    def __init__(self, item: dict, parent=None):
+        super().__init__(parent)
+        self._item = item
+        self.setWindowTitle(f"Edit Item — {item.get('name', 'New')}")
+        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
+        self.setMinimumSize(500, 400)
+        self.resize(550, 450)
+        self._build_ui()
+        self._load_data()
+
+    def _build_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setSpacing(12)
+
+        g = QGridLayout()
+        g.setSpacing(10)
+
+        g.addWidget(QLabel("Nome:"), 0, 0)
+        self._name = QLineEdit()
+        self._name.setMinimumHeight(36)
+        self._name.setPlaceholderText("Nome do item")
+        g.addWidget(self._name, 0, 1, 1, 3)
+
+        g.addWidget(QLabel("Categoria:"), 1, 0)
+        self._category = QComboBox()
+        self._category.setEditable(True)
+        self._category.setMinimumHeight(36)
+        self._category.addItems(_EQUIP_CATEGORIES)
+        g.addWidget(self._category, 1, 1)
+
+        g.addWidget(QLabel("Equipado:"), 1, 2)
+        self._equipped = QCheckBox()
+        g.addWidget(self._equipped, 1, 3)
+
+        g.addWidget(QLabel("Descrição:"), 2, 0, Qt.AlignTop)
+        self._desc = QTextEdit()
+        self._desc.setMinimumHeight(120)
+        self._desc.setPlaceholderText("Propriedades, bônus, notas...")
+        g.addWidget(self._desc, 2, 1, 1, 3)
+
+        lay.addLayout(g, stretch=1)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        ok_btn = QPushButton("✔ Salvar")
+        ok_btn.setObjectName("primary")
+        ok_btn.setMinimumHeight(36)
+        ok_btn.setMinimumWidth(120)
+        ok_btn.clicked.connect(self.accept)
+        btn_row.addWidget(ok_btn)
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.setMinimumHeight(36)
+        cancel_btn.setMinimumWidth(100)
+        cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(cancel_btn)
+        lay.addLayout(btn_row)
+
+    def _load_data(self):
+        self._name.setText(self._item.get("name", ""))
+        idx = self._category.findText(self._item.get("category", "Outro"))
+        if idx >= 0:
+            self._category.setCurrentIndex(idx)
+        else:
+            self._category.setCurrentText(self._item.get("category", "Outro"))
+        self._equipped.setChecked(self._item.get("equipped", False))
+        self._desc.setPlainText(self._item.get("description", ""))
+
+    def get_data(self) -> dict:
+        return {
+            "name": self._name.text(),
+            "category": self._category.currentText(),
+            "equipped": self._equipped.isChecked(),
+            "description": self._desc.toPlainText(),
+        }
+
+
 class CharacterSheetDialog(QDialog):
     """Full character sheet editor in its own window."""
 
@@ -305,8 +464,8 @@ class CharacterSheetDialog(QDialog):
             | Qt.WindowMinMaxButtonsHint
             | Qt.WindowCloseButtonHint
         )
-        self.setMinimumSize(800, 700)
-        self.resize(900, 800)
+        self.setMinimumSize(900, 800)
+        self.resize(1050, 950)
 
         self._build_ui()
         self._load_into_ui()
@@ -622,37 +781,167 @@ class CharacterSheetDialog(QDialog):
         # Install double-click handler on the tab bar
         tabs.tabBar().installEventFilter(self)
 
-        # Talents
+        # Talents — structured list with add/edit/delete
         t = QWidget()
         tl = QVBoxLayout(t)
-        self._talents_edit = QTextEdit()
-        self._talents_edit.setPlaceholderText("One talent per line...\ne.g. Weapon Training\nSurge of Strength")
-        self._talents_edit.setMinimumHeight(120)
-        self._talents_edit.textChanged.connect(self._auto_save)
-        tl.addWidget(self._talents_edit)
+        self._talents_list = QListWidget()
+        self._talents_list.setMinimumHeight(200)
+        self._talents_list.itemDoubleClicked.connect(self._edit_talent)
+        tl.addWidget(self._talents_list, stretch=1)
+
+        # Talent detail preview
+        self._talent_detail = QTextEdit()
+        self._talent_detail.setReadOnly(True)
+        self._talent_detail.setMaximumHeight(100)
+        self._talent_detail.setPlaceholderText("Selecione um talento para ver detalhes...")
+        self._talents_list.currentRowChanged.connect(self._show_talent_details)
+        tl.addWidget(self._talent_detail)
+
+        # Buttons
+        talent_btn_row = QHBoxLayout()
+        talent_add_btn = QPushButton("✚ Novo")
+        talent_add_btn.setObjectName("primary")
+        talent_add_btn.setMinimumHeight(36)
+        talent_add_btn.clicked.connect(self._new_talent)
+        talent_btn_row.addWidget(talent_add_btn)
+
+        talent_edit_btn = QPushButton("✎ Editar")
+        talent_edit_btn.setMinimumHeight(36)
+        talent_edit_btn.clicked.connect(self._edit_talent)
+        talent_btn_row.addWidget(talent_edit_btn)
+
+        talent_del_btn = QPushButton("🗑 Excluir")
+        talent_del_btn.setObjectName("danger")
+        talent_del_btn.setMinimumHeight(36)
+        talent_del_btn.clicked.connect(self._delete_talent)
+        talent_btn_row.addWidget(talent_del_btn)
+        tl.addLayout(talent_btn_row)
         tabs.addTab(t, "⚔️ Talents")
 
-        # Spells
+        # Spells — structured picker
         s = QWidget()
         sl = QVBoxLayout(s)
-        self._spells_edit = QTextEdit()
-        self._spells_edit.setPlaceholderText(
-            "Format: Tradition | Rank | Spell Name | Description\n"
-            "e.g. Fire | 0 | Flame Missile | Ranged attack, 1d6 fire"
-        )
-        self._spells_edit.setMinimumHeight(120)
-        self._spells_edit.textChanged.connect(self._auto_save)
-        sl.addWidget(self._spells_edit)
+
+        # Top filters row
+        filt_row = QHBoxLayout()
+        filt_row.addWidget(QLabel("Tradição:"))
+        self._spell_tradition_combo = QComboBox()
+        self._spell_tradition_combo.addItem("— Todas —")
+        for trad in sorted({sp["tradition"] for sp in _SPELLS}):
+            self._spell_tradition_combo.addItem(trad)
+        self._spell_tradition_combo.currentTextChanged.connect(self._refresh_available_spells)
+        filt_row.addWidget(self._spell_tradition_combo, 1)
+
+        filt_row.addWidget(QLabel("Rank:"))
+        self._spell_rank_combo = QComboBox()
+        self._spell_rank_combo.addItem("Todos")
+        for r in range(6):
+            self._spell_rank_combo.addItem(str(r))
+        self._spell_rank_combo.currentTextChanged.connect(self._refresh_available_spells)
+        filt_row.addWidget(self._spell_rank_combo)
+
+        self._spell_search = QLineEdit()
+        self._spell_search.setPlaceholderText("Buscar magia...")
+        self._spell_search.textChanged.connect(self._refresh_available_spells)
+        filt_row.addWidget(self._spell_search, 1)
+        sl.addLayout(filt_row)
+
+        # Two-column layout: available | buttons | my spells
+        cols = QHBoxLayout()
+
+        # Left: available spells
+        left_col = QVBoxLayout()
+        left_col.addWidget(QLabel("Magias Disponíveis"))
+        self._available_spells_list = QListWidget()
+        self._available_spells_list.currentRowChanged.connect(self._show_spell_details)
+        left_col.addWidget(self._available_spells_list)
+        cols.addLayout(left_col, 1)
+
+        # Middle: add/remove buttons
+        btn_col = QVBoxLayout()
+        btn_col.addStretch()
+        add_btn = QPushButton("▶ Adicionar")
+        add_btn.clicked.connect(self._add_spell)
+        btn_col.addWidget(add_btn)
+        rem_btn = QPushButton("◀ Remover")
+        rem_btn.clicked.connect(self._remove_spell)
+        btn_col.addWidget(rem_btn)
+        btn_col.addStretch()
+        cols.addLayout(btn_col)
+
+        # Right: my spells
+        right_col = QVBoxLayout()
+        right_col.addWidget(QLabel("Minhas Magias"))
+        self._my_spells_list = QListWidget()
+        self._my_spells_list.currentRowChanged.connect(self._show_my_spell_details)
+        right_col.addWidget(self._my_spells_list)
+        cols.addLayout(right_col, 1)
+
+        sl.addLayout(cols)
+
+        # Bottom: spell detail preview
+        self._spell_detail = QTextEdit()
+        self._spell_detail.setReadOnly(True)
+        self._spell_detail.setMaximumHeight(120)
+        self._spell_detail.setPlaceholderText("Selecione uma magia para ver detalhes...")
+        sl.addWidget(self._spell_detail)
+
         tabs.addTab(s, "✨ Spells")
 
-        # Equipment
+        # Equipment — structured inventory
         e = QWidget()
         el = QVBoxLayout(e)
-        self._equipment_edit = QTextEdit()
-        self._equipment_edit.setPlaceholderText("One item per line...\ne.g. Longsword\nChain mail (Defense +4)")
-        self._equipment_edit.setMinimumHeight(120)
-        self._equipment_edit.textChanged.connect(self._auto_save)
-        el.addWidget(self._equipment_edit)
+
+        # Gold row at top
+        gold_row = QHBoxLayout()
+        gold_row.addWidget(QLabel("💰 Ouro:"))
+        self._gold_spin = QSpinBox()
+        self._gold_spin.setRange(0, 999999)
+        self._gold_spin.setMinimumHeight(36)
+        self._gold_spin.setMinimumWidth(120)
+        self._gold_spin.valueChanged.connect(self._auto_save)
+        gold_row.addWidget(self._gold_spin)
+        gold_row.addStretch()
+        el.addLayout(gold_row)
+
+        # Equipment list
+        self._equipment_list = QListWidget()
+        self._equipment_list.setMinimumHeight(200)
+        self._equipment_list.itemDoubleClicked.connect(self._edit_equipment)
+        self._equipment_list.currentRowChanged.connect(self._show_equipment_details)
+        el.addWidget(self._equipment_list, stretch=1)
+
+        # Equipment detail preview
+        self._equipment_detail = QTextEdit()
+        self._equipment_detail.setReadOnly(True)
+        self._equipment_detail.setMaximumHeight(100)
+        self._equipment_detail.setPlaceholderText("Selecione um item para ver detalhes...")
+        el.addWidget(self._equipment_detail)
+
+        # Buttons
+        equip_btn_row = QHBoxLayout()
+        equip_add_btn = QPushButton("✚ Novo")
+        equip_add_btn.setObjectName("primary")
+        equip_add_btn.setMinimumHeight(36)
+        equip_add_btn.clicked.connect(self._new_equipment)
+        equip_btn_row.addWidget(equip_add_btn)
+
+        equip_edit_btn = QPushButton("✎ Editar")
+        equip_edit_btn.setMinimumHeight(36)
+        equip_edit_btn.clicked.connect(self._edit_equipment)
+        equip_btn_row.addWidget(equip_edit_btn)
+
+        equip_toggle_btn = QPushButton("🔄 Equipar/Desequipar")
+        equip_toggle_btn.setMinimumHeight(36)
+        equip_toggle_btn.clicked.connect(self._toggle_equip)
+        equip_btn_row.addWidget(equip_toggle_btn)
+
+        equip_del_btn = QPushButton("🗑 Excluir")
+        equip_del_btn.setObjectName("danger")
+        equip_del_btn.setMinimumHeight(36)
+        equip_del_btn.clicked.connect(self._delete_equipment)
+        equip_btn_row.addWidget(equip_del_btn)
+        el.addLayout(equip_btn_row)
         tabs.addTab(e, "🎒 Equipment")
 
         # Languages & Professions
@@ -711,7 +1000,7 @@ class CharacterSheetDialog(QDialog):
 
         dlg = QDialog(self)
         dlg.setWindowTitle(label)
-        dlg.resize(700, 500)
+        dlg.resize(800, 600)
         lay = QVBoxLayout(dlg)
         lay.setContentsMargins(8, 8, 8, 8)
         lay.addWidget(widget)
@@ -988,23 +1277,239 @@ class CharacterSheetDialog(QDialog):
         self._power_spin.setValue(c.power)
         self._fortune_check.setChecked(c.fortune)
 
-        self._talents_edit.setPlainText("\n".join(c.talents))
-        self._equipment_edit.setPlainText("\n".join(c.equipment))
+        self._talents_list.clear()
+        for tal in c.talents:
+            name = tal.get("name", "Unnamed")
+            lvl = tal.get("level", 0)
+            summary = f"Lv{lvl} — {name}" if lvl else name
+            item = QListWidgetItem(summary)
+            item.setData(Qt.UserRole, tal)
+            self._talents_list.addItem(item)
+
+        self._equipment_list.clear()
+        for eq in c.equipment:
+            self._equipment_list.addItem(self._make_equip_item(eq))
+        self._gold_spin.setValue(c.gold)
         self._languages_edit.setText(", ".join(c.languages))
         self._professions_edit.setText(", ".join(c.professions))
         self._notes_edit.setPlainText(c.notes)
 
-        spell_lines = []
+        # Populate picked spells list
+        self._my_spells_list.clear()
         for sp in c.spells:
-            line = f"{sp.get('tradition', '')} | {sp.get('rank', 0)} | {sp.get('name', '')} | {sp.get('description', '')}"
-            spell_lines.append(line)
-        self._spells_edit.setPlainText("\n".join(spell_lines))
+            label = f"[{sp.get('tradition', '')}] R{sp.get('rank', 0)} — {sp.get('name', '')}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, sp)
+            self._my_spells_list.addItem(item)
 
         self._refresh_inv_list()
         self._load_portrait()
 
         self._loading = False
         self._update_derived()
+        self._refresh_available_spells()
+
+    # ── Spell Picker Helpers ────────────────────────────────────
+
+    def _refresh_available_spells(self):
+        """Filter and display available spells based on tradition/rank/search."""
+        self._available_spells_list.clear()
+        trad_filter = self._spell_tradition_combo.currentText()
+        rank_filter = self._spell_rank_combo.currentText()
+        search = self._spell_search.text().strip().lower()
+
+        # Collect names already picked
+        picked_names = set()
+        for i in range(self._my_spells_list.count()):
+            data = self._my_spells_list.item(i).data(Qt.UserRole)
+            if data:
+                picked_names.add((data["name"], data["tradition"], data["rank"]))
+
+        for sp in _SPELLS:
+            if trad_filter != "— Todas —" and sp["tradition"] != trad_filter:
+                continue
+            if rank_filter != "Todos" and str(sp["rank"]) != rank_filter:
+                continue
+            if search and search not in sp["name"].lower() and search not in sp.get("description", "").lower():
+                continue
+            key = (sp["name"], sp["tradition"], sp["rank"])
+            if key in picked_names:
+                continue
+            label = f"[{sp['tradition']}] R{sp['rank']} — {sp['name']}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, sp)
+            self._available_spells_list.addItem(item)
+
+    def _show_spell_details(self, row):
+        if row < 0:
+            return
+        item = self._available_spells_list.item(row)
+        if item:
+            sp = item.data(Qt.UserRole)
+            self._spell_detail.setPlainText(
+                f"{sp['name']} ({sp['tradition']} — Rank {sp['rank']})\n{sp.get('description', '')}"
+            )
+
+    def _show_my_spell_details(self, row):
+        if row < 0:
+            return
+        item = self._my_spells_list.item(row)
+        if item:
+            sp = item.data(Qt.UserRole)
+            self._spell_detail.setPlainText(
+                f"{sp['name']} ({sp['tradition']} — Rank {sp['rank']})\n{sp.get('description', '')}"
+            )
+
+    def _add_spell(self):
+        item = self._available_spells_list.currentItem()
+        if not item:
+            return
+        sp = item.data(Qt.UserRole)
+        label = f"[{sp['tradition']}] R{sp['rank']} — {sp['name']}"
+        new_item = QListWidgetItem(label)
+        new_item.setData(Qt.UserRole, sp)
+        self._my_spells_list.addItem(new_item)
+        self._refresh_available_spells()
+        self._auto_save()
+
+    def _remove_spell(self):
+        row = self._my_spells_list.currentRow()
+        if row < 0:
+            return
+        self._my_spells_list.takeItem(row)
+        self._refresh_available_spells()
+        self._auto_save()
+
+    # ── Talent Helpers ──────────────────────────────────────────
+
+    def _refresh_talents_list(self):
+        self._talents_list.clear()
+        for tal in self._char.talents:
+            name = tal.get("name", "Unnamed")
+            lvl = tal.get("level", 0)
+            summary = f"Lv{lvl} — {name}" if lvl else name
+            item = QListWidgetItem(summary)
+            item.setData(Qt.UserRole, tal)
+            self._talents_list.addItem(item)
+
+    def _show_talent_details(self, row):
+        if row < 0:
+            return
+        item = self._talents_list.item(row)
+        if item:
+            tal = item.data(Qt.UserRole)
+            self._talent_detail.setPlainText(
+                f"{tal.get('name', '')} (Nível {tal.get('level', 0)})\n{tal.get('description', '')}"
+            )
+
+    def _new_talent(self):
+        new_tal = {"name": "", "level": 0, "description": ""}
+        dlg = TalentEditorDialog(new_tal, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            data = dlg.get_data()
+            if data["name"].strip():
+                self._char.talents.append(data)
+                self._refresh_talents_list()
+                self._auto_save()
+
+    def _edit_talent(self):
+        row = self._talents_list.currentRow()
+        if row < 0 or row >= len(self._char.talents):
+            return
+        tal = self._char.talents[row]
+        dlg = TalentEditorDialog(tal, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            self._char.talents[row] = dlg.get_data()
+            self._refresh_talents_list()
+            self._auto_save()
+
+    def _delete_talent(self):
+        row = self._talents_list.currentRow()
+        if row < 0 or row >= len(self._char.talents):
+            return
+        name = self._char.talents[row].get("name", "Unnamed")
+        reply = QMessageBox.question(
+            self, "Excluir Talento",
+            f"Excluir '{name}'?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            self._char.talents.pop(row)
+            self._refresh_talents_list()
+            self._auto_save()
+
+    # ── Equipment Helpers ───────────────────────────────────────
+
+    def _make_equip_item(self, eq: dict) -> QListWidgetItem:
+        """Create a QListWidgetItem for an equipment dict."""
+        name = eq.get("name", "Unnamed")
+        cat = eq.get("category", "")
+        equipped = "✅" if eq.get("equipped", False) else "❌"
+        label = f"{equipped}  [{cat}] {name}"
+        item = QListWidgetItem(label)
+        item.setData(Qt.UserRole, eq)
+        return item
+
+    def _refresh_equipment_list(self):
+        self._equipment_list.clear()
+        for eq in self._char.equipment:
+            self._equipment_list.addItem(self._make_equip_item(eq))
+
+    def _show_equipment_details(self, row):
+        if row < 0:
+            return
+        item = self._equipment_list.item(row)
+        if item:
+            eq = item.data(Qt.UserRole)
+            equipped_txt = "Equipado" if eq.get("equipped", False) else "Não equipado"
+            self._equipment_detail.setPlainText(
+                f"{eq.get('name', '')} ({eq.get('category', '')} — {equipped_txt})\n{eq.get('description', '')}"
+            )
+
+    def _new_equipment(self):
+        new_eq = {"name": "", "category": "Outro", "equipped": False, "description": ""}
+        dlg = EquipmentEditorDialog(new_eq, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            data = dlg.get_data()
+            if data["name"].strip():
+                self._char.equipment.append(data)
+                self._refresh_equipment_list()
+                self._auto_save()
+
+    def _edit_equipment(self):
+        row = self._equipment_list.currentRow()
+        if row < 0 or row >= len(self._char.equipment):
+            return
+        eq = self._char.equipment[row]
+        dlg = EquipmentEditorDialog(eq, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            self._char.equipment[row] = dlg.get_data()
+            self._refresh_equipment_list()
+            self._auto_save()
+
+    def _toggle_equip(self):
+        row = self._equipment_list.currentRow()
+        if row < 0 or row >= len(self._char.equipment):
+            return
+        self._char.equipment[row]["equipped"] = not self._char.equipment[row].get("equipped", False)
+        self._refresh_equipment_list()
+        self._equipment_list.setCurrentRow(row)
+        self._auto_save()
+
+    def _delete_equipment(self):
+        row = self._equipment_list.currentRow()
+        if row < 0 or row >= len(self._char.equipment):
+            return
+        name = self._char.equipment[row].get("name", "Unnamed")
+        reply = QMessageBox.question(
+            self, "Excluir Item",
+            f"Excluir '{name}'?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            self._char.equipment.pop(row)
+            self._refresh_equipment_list()
+            self._auto_save()
 
     # ── Save From UI ────────────────────────────────────────────
 
@@ -1038,21 +1543,31 @@ class CharacterSheetDialog(QDialog):
         c.power = self._power_spin.value()
         c.fortune = self._fortune_check.isChecked()
 
-        c.talents = [t for t in self._talents_edit.toPlainText().splitlines() if t.strip()]
-        c.equipment = [e for e in self._equipment_edit.toPlainText().splitlines() if e.strip()]
+        c.talents = []
+        for i in range(self._talents_list.count()):
+            data = self._talents_list.item(i).data(Qt.UserRole)
+            if data:
+                c.talents.append(data)
+
+        c.equipment = []
+        for i in range(self._equipment_list.count()):
+            data = self._equipment_list.item(i).data(Qt.UserRole)
+            if data:
+                c.equipment.append(data)
+        c.gold = self._gold_spin.value()
         c.languages = [l.strip() for l in self._languages_edit.text().split(",") if l.strip()]
         c.professions = [p.strip() for p in self._professions_edit.text().split(",") if p.strip()]
         c.notes = self._notes_edit.toPlainText()
 
         spells = []
-        for line in self._spells_edit.toPlainText().splitlines():
-            parts = [p.strip() for p in line.split("|")]
-            if len(parts) >= 3:
+        for i in range(self._my_spells_list.count()):
+            data = self._my_spells_list.item(i).data(Qt.UserRole)
+            if data:
                 spells.append({
-                    "tradition": parts[0],
-                    "rank": int(parts[1]) if parts[1].isdigit() else 0,
-                    "name": parts[2],
-                    "description": parts[3] if len(parts) > 3 else "",
+                    "tradition": data.get("tradition", ""),
+                    "rank": data.get("rank", 0),
+                    "name": data.get("name", ""),
+                    "description": data.get("description", ""),
                 })
         c.spells = spells
 

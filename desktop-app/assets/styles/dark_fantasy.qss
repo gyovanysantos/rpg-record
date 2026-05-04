@@ -17,7 +17,7 @@ QWidget {
     background-color: #1a1a2e;
     color: #e0d6c8;
     font-family: "Segoe UI", "Noto Sans", sans-serif;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 /* --- Main Window --- */
@@ -103,7 +103,7 @@ QPushButton {
     border-radius: 8px;
     padding: 10px 20px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 QPushButton:hover {
@@ -153,8 +153,8 @@ QLineEdit, QTextEdit, QPlainTextEdit {
     color: #e0d6c8;
     border: 1px solid #2a2a4a;
     border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 10px 14px;
+    font-size: 16px;
     selection-background-color: #c4a35a;
     selection-color: #1a1a2e;
 }
@@ -169,8 +169,8 @@ QSpinBox, QDoubleSpinBox {
     color: #e0d6c8;
     border: 1px solid #2a2a4a;
     border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 14px;
+    padding: 8px 12px;
+    font-size: 16px;
 }
 
 QSpinBox:focus, QDoubleSpinBox:focus {
@@ -190,8 +190,8 @@ QComboBox {
     color: #e0d6c8;
     border: 1px solid #2a2a4a;
     border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 10px 14px;
+    font-size: 16px;
 }
 
 QComboBox:hover {
@@ -270,8 +270,9 @@ QTabBar::tab {
     border-bottom: none;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    padding: 8px 20px;
+    padding: 10px 24px;
     margin-right: 2px;
+    font-size: 15px;
 }
 
 QTabBar::tab:selected {
@@ -283,6 +284,30 @@ QTabBar::tab:selected {
 QTabBar::tab:hover:!selected {
     background-color: #16213e;
     color: #e0d6c8;
+}
+
+/* --- List Widget --- */
+QListWidget {
+    background-color: #0d1117;
+    color: #e0d6c8;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    font-size: 15px;
+    padding: 4px;
+}
+
+QListWidget::item {
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+QListWidget::item:selected {
+    background-color: #0f3460;
+    color: #c4a35a;
+}
+
+QListWidget::item:hover:!selected {
+    background-color: #16213e;
 }
 
 /* --- Table --- */
