@@ -96,3 +96,60 @@
 ## Desktop App — Phase 8: Polish & Packaging
 - [ ] PyInstaller .exe build
 - [ ] Icon, splash screen, final polish
+
+---
+
+## Desktop App v2 — Tauri + React Migration
+
+### Phase 0: Game Data Updates ✅
+- [x] Add 11 Primal (Primitiva) spells to `spells.json` (34 traditions total)
+- [x] Add "Primal" to `game_data.json` spell_traditions array
+
+### Phase 1: Project Scaffold ✅
+- [x] Create `desktop-app-v2/` with package.json, vite.config.ts, tailwind.config.js
+- [x] Create Tauri config (Cargo.toml, tauri.conf.json, lib.rs, main.rs)
+- [x] Create React entry (main.tsx, App.tsx, index.css, vite-env.d.ts)
+- [x] Create i18n setup (i18n.ts, pt-BR.json, en.json)
+- [x] Create zustand store (appStore.ts)
+- [x] Create layout components (RolePicker, Sidebar, AppLayout)
+- [x] Create all page stubs (Dashboard, Characters, Spells, Talents, Dice, Initiative, Recorder, Transcripts, Narrator, Settings)
+- [x] Create FastAPI backend (main.py + 5 routers: characters, spells, game_data, sessions, settings)
+- [x] Update ARCHITECTURE.md and TECH-STACK.md
+
+### Phase 2: Setup & Verify (user action needed)
+- [ ] `git checkout -b feature/card-ux-overhaul`
+- [ ] `cd desktop-app-v2 && npm install`
+- [ ] `cd backend && pip install -r requirements.txt`
+- [ ] Verify frontend runs: `npm run dev`
+- [ ] Verify backend runs: `uvicorn backend.main:app --port 8420`
+
+### Phase 3: Core Functionality
+- [ ] Recording, pipeline, and narrator routers (FastAPI)
+- [ ] WebSocket for live audio levels
+
+### Phase 4: Card-Based Spells
+- [ ] SpellCard component (flip animation, rank badge, tradition color)
+- [ ] SpellDeck grid with filtering/search
+- [ ] SpellPickerModal for character sheet
+- [ ] React-query hooks for /api/spells
+
+### Phase 5: Card-Based Talents
+- [ ] TalentCard component
+- [ ] TalentDeck grid
+- [ ] TalentPickerModal for character sheet
+
+### Phase 6: Character Sheet (full port)
+- [ ] Character form with all SotDL fields
+- [ ] Spell/Talent card integration
+- [ ] Portrait upload
+
+### Phase 7: Remaining Pages (full port)
+- [ ] RecorderPage with live audio meters
+- [ ] TranscriptsPage with search + export
+- [ ] NarratorPage with voice selection + audio player
+- [ ] DashboardPage with live data from API
+
+### Phase 8: Distribution
+- [ ] Tauri build (.exe)
+- [ ] FastAPI sidecar packaging
+- [ ] Installer / auto-update

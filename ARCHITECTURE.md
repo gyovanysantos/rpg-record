@@ -228,4 +228,135 @@ Developer                           GitHub Actions
 
 ### Local Build
 - `scripts/build.ps1` — PowerShell script for local `.exe` builds
+
+---
+
+## Desktop App v2 (`desktop-app-v2/`) — Tauri + React + FastAPI
+
+A complete rewrite of the desktop app using a modern web-based stack while keeping all existing Python backend modules intact.
+
+### Architecture Overview
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Tauri v2 (Rust Shell)                       │
+│  - Native window management (1280x800, min 900x600)            │
+│  - Launches FastAPI as sidecar process                         │
+│  - File system access via Tauri APIs                           │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ hosts
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              React 18 + TypeScript + Vite Frontend              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────────────┐   │
+│  │ zustand  │ │ i18next  │ │ framer-  │ │ @tanstack/      │   │
+│  │ (state)  │ │ (PT/EN)  │ │ motion   │ │ react-query     │   │
+│  └──────────┘ └──────────┘ └──────────┘ └─────────────────┘   │
+│  TailwindCSS dark fantasy theme (gold + midnight blue)         │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ HTTP REST + WebSocket
+                         │ /api → localhost:8420
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              FastAPI Backend (localhost:8420)                    │
+│  ┌────────────┐ ┌────────┐ ┌───────────┐ ┌──────────────────┐ │
+│  │ characters │ │ spells │ │ game_data │ │   sessions       │ │
+│  │   router   │ │ router │ │  router   │ │   router         │ │
+│  └────────────┘ └────────┘ └───────────┘ └──────────────────┘ │
+│  ┌────────────┐                                                │
+│  │  settings  │  (Phase 3: recording, pipeline, narrator)      │
+│  │   router   │                                                │
+│  └────────────┘                                                │
+│  Imports existing Python modules: recorder, processor,         │
+│  transcriber, merger, summarizer, config                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Folder Structure
+```
+desktop-app-v2/
+├── package.json                ← React + Tauri deps
+├── vite.config.ts              ← Dev proxy /api→8420, /ws→ws://8420
+├── tailwind.config.js          ← Dark fantasy theme + custom animations
+├── index.html                  ← Entry point (lang="pt-BR")
+├── src/
+│   ├── main.tsx                ← React root: QueryClient, BrowserRouter, i18n
+│   ├── App.tsx                 ← RolePicker gate → AppLayout with Routes
+│   ├── i18n.ts                 ← react-i18next config (PT-BR default)
+│   ├── index.css               ← Tailwind + custom component classes
+│   ├── stores/
+│   │   └── appStore.ts         ← zustand: role, sidebar state
+│   ├── locales/
+│   │   ├── pt-BR.json          ← Portuguese translation (~200 keys)
+│   │   └── en.json             ← English translation
+│   ├── components/layout/
+│   │   ├── RolePicker.tsx      ← DM/Player selection screen
+│   │   ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
+│   │   └── AppLayout.tsx       ← Sidebar + animated page container
+│   └── pages/
+│       ├── DashboardPage.tsx   ← Stats + recent sessions
+│       ├── CharactersPage.tsx  ← Character list (stub)
+│       ├── SpellsPage.tsx      ← Spell cards (stub)
+│       ├── TalentsPage.tsx     ← Talent cards (stub)
+│       ├── DicePage.tsx        ← d20 + boons/banes roller (functional)
+│       ├── InitiativePage.tsx  ← Fast/slow turn tracker (stub)
+│       ├── RecorderPage.tsx    ← Audio recording (stub, DM only)
+│       ├── TranscriptsPage.tsx ← Transcript viewer (stub, DM only)
+│       ├── NarratorPage.tsx    ← TTS narration (stub, DM only)
+│       └── SettingsPage.tsx    ← Language + API keys (functional)
+├── src-tauri/
+│   ├── Cargo.toml              ← tauri 2 + shell plugin
+│   ├── tauri.conf.json         ← Window config, dev server 1420
+│   └── src/
+│       ├── lib.rs              ← Tauri builder with shell plugin
+│       └── main.rs             ← Windows entry point
+└── backend/
+    ├── main.py                 ← FastAPI app, CORS, router imports
+    ├── requirements.txt        ← fastapi, uvicorn, pydantic, dotenv
+    └── routers/
+        ├── characters.py       ← CRUD: GET/POST/PUT/DELETE /api/characters
+        ├── spells.py           ← Read-only: GET /api/spells, /api/spells/traditions
+        ├── game_data.py        ← Read-only: ancestries, paths, traditions
+        ├── sessions.py         ← List sessions, read transcripts/summaries
+        └── settings.py         ← .env API key management (masked display)
+```
+
+### Communication Flow
+```
+React Component
+  │
+  ├─ useQuery / useMutation (@tanstack/react-query)
+  │     │
+  │     ▼
+  │   fetch('/api/characters')  ← Vite dev proxy in dev mode
+  │     │
+  │     ▼
+  │   FastAPI Router (localhost:8420)
+  │     │
+  │     ▼
+  │   Existing Python module (character.py, etc.)
+  │     │
+  │     ▼
+  │   JSON file on disk (data/characters/*.json)
+  │
+  └─ zustand store (local UI state: role, sidebar)
+```
+
+### i18n Strategy
+- **UI strings**: Translated via react-i18next (`t('sidebar.spells')`)
+- **Game data**: Stays in Portuguese (from the SotDL book in PT-BR)
+- **Default language**: PT-BR, switchable to EN in Settings
+- **Persistence**: Stored in `localStorage`
+
+### Color Palette
+| Token    | Hex       | Usage                    |
+|----------|-----------|--------------------------|
+| bg       | `#1a1a2e` | Page background          |
+| surface  | `#16213e` | Cards, panels            |
+| card     | `#0f3460` | Elevated cards           |
+| accent   | `#c4a35a` | Gold highlights, buttons |
+| text     | `#e0d6c8` | Primary text             |
+| muted    | `#8a7e6b` | Secondary text           |
+| danger   | `#8b0000` | Delete, errors           |
+| success  | `#2e5e3e` | Confirm, online status   |
+| border   | `#2a2a4a` | Dividers, outlines       |
 - Installs deps, runs PyInstaller, reports output path and size

@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary min-h-screen;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar for dark fantasy theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-muted;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent text-background px-4 py-2 rounded-lg font-semibold
+           hover:bg-accent-hover transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-accent/50;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-text-primary px-4 py-2 rounded-lg font-semibold
+           hover:bg-danger-hover transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-danger/50;
+  }
+
+  .btn-ghost {
+    @apply text-text-muted px-4 py-2 rounded-lg
+           hover:bg-surface hover:text-text-primary transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-accent/30;
+  }
+
+  .card {
+    @apply bg-card border border-border rounded-xl p-4
+           shadow-lg shadow-black/20;
+  }
+
+  .input {
+    @apply bg-surface border border-border rounded-lg px-3 py-2
+           text-text-primary placeholder:text-text-muted
+           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
+           transition-colors duration-200;
+  }
+}
