@@ -13,8 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 # (recorder, processor, transcriber, merger, summarizer, config)
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent  # rpg-record/
 DESKTOP_APP_DIR = ROOT_DIR / "desktop-app"
+BACKEND_DIR = Path(__file__).resolve().parent  # desktop-app-v2/backend/
 
-for p in [str(ROOT_DIR), str(DESKTOP_APP_DIR)]:
+for p in [str(ROOT_DIR), str(DESKTOP_APP_DIR), str(BACKEND_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
