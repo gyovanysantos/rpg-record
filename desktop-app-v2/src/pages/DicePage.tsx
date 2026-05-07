@@ -133,7 +133,7 @@ export default function DicePage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm text-text-muted">{t("dice.history")}</h2>
             <button
-              className="btn-ghost text-xs"
+              className="btn-ghost text-sm"
               onClick={() => setHistory([])}
             >
               {t("dice.clearHistory")}

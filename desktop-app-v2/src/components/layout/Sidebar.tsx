@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { path: "/spells", labelKey: "sidebar.spells", icon: <Sparkles size={20} /> },
   { path: "/talents", labelKey: "sidebar.talents", icon: <Star size={20} /> },
   { path: "/dice", labelKey: "sidebar.dice", icon: <Dices size={20} /> },
-  { path: "/initiative", labelKey: "sidebar.initiative", icon: <Swords size={20} /> },
+  { path: "/initiative", labelKey: "sidebar.initiative", icon: <Swords size={20} />, dmOnly: true },
   { path: "/recorder", labelKey: "sidebar.recorder", icon: <Mic size={20} />, dmOnly: true },
   { path: "/transcripts", labelKey: "sidebar.transcripts", icon: <FileText size={20} />, dmOnly: true },
   { path: "/narrator", labelKey: "sidebar.narrator", icon: <BookOpen size={20} />, dmOnly: true },
@@ -54,7 +54,7 @@ export default function Sidebar() {
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-border">
         {!collapsed && (
-          <span className="font-display text-accent text-sm tracking-wider">
+          <span className="font-display text-accent text-base tracking-wider">
             RPG Record
           </span>
         )}
@@ -85,7 +85,7 @@ export default function Sidebar() {
           >
             {item.icon}
             {!collapsed && (
-              <span className="text-sm">{t(item.labelKey)}</span>
+              <span className="text-base">{t(item.labelKey)}</span>
             )}
           </NavLink>
         ))}
@@ -94,7 +94,7 @@ export default function Sidebar() {
       {/* Role indicator */}
       <div className="p-4 border-t border-border">
         {!collapsed && (
-          <span className="text-xs text-text-muted uppercase tracking-wider">
+          <span className="text-sm text-text-muted uppercase tracking-wider">
             {role === "dm" ? t("roles.dm") : t("roles.player")}
           </span>
         )}

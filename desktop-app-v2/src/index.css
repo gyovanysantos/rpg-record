@@ -3,9 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 15px;
+  }
+
   body {
-    @apply bg-background text-text-primary min-h-screen;
-    font-family: "Segoe UI", system-ui, sans-serif;
+    @apply bg-background text-text-primary min-h-screen text-base;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
   /* Custom scrollbar for dark fantasy theme */
@@ -56,5 +60,13 @@
            text-text-primary placeholder:text-text-muted
            focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
            transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply bg-surface border border-border rounded-lg px-3 py-2
+           text-text-primary placeholder:text-text-muted
+           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
+           transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+           w-full text-sm;
   }
 }

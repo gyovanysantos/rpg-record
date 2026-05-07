@@ -4,6 +4,7 @@ import RolePicker from "./components/layout/RolePicker";
 import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import CharactersPage from "./pages/CharactersPage";
+import CharacterSheetPage from "./pages/CharacterSheetPage";
 import SpellsPage from "./pages/SpellsPage";
 import TalentsPage from "./pages/TalentsPage";
 import DicePage from "./pages/DicePage";
@@ -25,6 +26,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/characters" element={<CharactersPage />} />
+        <Route path="/characters/:filename" element={<CharacterSheetPage />} />
         <Route path="/spells" element={<SpellsPage />} />
         <Route path="/talents" element={<TalentsPage />} />
         <Route path="/dice" element={<DicePage />} />

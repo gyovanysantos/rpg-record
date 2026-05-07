@@ -292,17 +292,32 @@ desktop-app-v2/
 │   │   ├── RolePicker.tsx      ← DM/Player selection screen
 │   │   ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
 │   │   └── AppLayout.tsx       ← Sidebar + animated page container
+│   ├── components/
+│   │   ├── cards/
+│   │   │   ├── SpellCard.tsx       ← Flippable spell card (front/back, cast tracker)
+│   │   │   └── SpellDeck.tsx       ← Filterable spell grid (search, tradition, rank)
+│   │   ├── modals/
+│   │   │   └── SpellPickerModal.tsx ← Modal to browse & pick spells from database
+│   │   └── layout/
+│   │       ├── RolePicker.tsx      ← DM/Player selection screen
+│   │       ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
+│   │       └── AppLayout.tsx       ← Sidebar + animated page container
+│   ├── hooks/
+│   │   ├── useCharacters.ts        ← CRUD hooks for characters (react-query)
+│   │   ├── useSpells.ts            ← Spell & tradition hooks (react-query)
+│   │   └── useGameData.ts          ← Ancestry, path, tradition hooks
 │   └── pages/
-│       ├── DashboardPage.tsx   ← Stats + recent sessions
-│       ├── CharactersPage.tsx  ← Character list (stub)
-│       ├── SpellsPage.tsx      ← Spell cards (stub)
-│       ├── TalentsPage.tsx     ← Talent cards (stub)
-│       ├── DicePage.tsx        ← d20 + boons/banes roller (functional)
-│       ├── InitiativePage.tsx  ← Fast/slow turn tracker (stub)
-│       ├── RecorderPage.tsx    ← Audio recording (stub, DM only)
-│       ├── TranscriptsPage.tsx ← Transcript viewer (stub, DM only)
-│       ├── NarratorPage.tsx    ← TTS narration (stub, DM only)
-│       └── SettingsPage.tsx    ← Language + API keys (functional)
+│       ├── DashboardPage.tsx       ← Stats + recent sessions
+│       ├── CharactersPage.tsx      ← Character list with create/delete
+│       ├── CharacterSheetPage.tsx  ← Full tabbed character editor (see below)
+│       ├── SpellsPage.tsx          ← Spell database browser (SpellDeck)
+│       ├── TalentsPage.tsx         ← Talent cards (stub)
+│       ├── DicePage.tsx            ← d20 + boons/banes roller (functional)
+│       ├── InitiativePage.tsx      ← Fast/slow turn tracker (stub)
+│       ├── RecorderPage.tsx        ← Audio recording (stub, DM only)
+│       ├── TranscriptsPage.tsx     ← Transcript viewer (stub, DM only)
+│       ├── NarratorPage.tsx        ← TTS narration (stub, DM only)
+│       └── SettingsPage.tsx        ← Language + API keys (functional)
 ├── src-tauri/
 │   ├── Cargo.toml              ← tauri 2 + shell plugin
 │   ├── tauri.conf.json         ← Window config, dev server 1420
@@ -360,3 +375,79 @@ React Component
 | success  | `#2e5e3e` | Confirm, online status   |
 | border   | `#2a2a4a` | Dividers, outlines       |
 - Installs deps, runs PyInstaller, reports output path and size
+
+### CharacterSheetPage — Tabbed Architecture
+The character sheet is the most complex page in the app, implemented with 5 tabs:
+
+```
+CharacterSheetPage.tsx (~650 lines)
+  │
+  ├─ Header: [← Voltar] [Name] [Level · Ancestry] [⚔️ Modo Combate] [🔒 Lock/Unlock]
+  │
+  ├─ Combat Mode Banner (visible when combat active)
+  │    └─ Red pulsing banner: "⚔️ COMBATE ATIVO" with restore message
+  │
+  ├─ Combat End Confirmation Dialog (modal overlay)
+  │    └─ "Encerrar Combate?" → "Continuar Combate" / "Encerrar e Restaurar"
+  │
+  ├─ Tab Bar: Stats | Magias | Talentos | Equipamento | Anotações
+  │                    (badges show count when items exist)
+  │
+  ├─ Stats Tab
+  │    ├─ Identity: Name, Level, Ancestry, Size, Novice/Expert/Master paths
+  │    ├─ Attributes: Strength, Agility, Intellect, Will (with modifier calc)
+  │    ├─ Health: HP bar, damage, healing rate, bonus
+  │    ├─ Combat: Defense, Speed, Perception (icon cards + bonus fields)
+  │    ├─ Secondary: Power, Corruption, Insanity, Fortune (checkbox), Gold
+  │    └─ Languages & Professions
+  │
+  ├─ Spells Tab (SpellsTab component)
+  │    ├─ SpellCard grid (interactive: cast/track castings per spell)
+  │    ├─ "Adicionar Magia" → opens SpellPickerModal
+  │    └─ Trash button per spell to remove from deck
+  │
+  ├─ Talents Tab (TalentsTab component)
+  │    ├─ Inline CRUD cards: name, level (spinner), description
+  │    ├─ "Adicionar Talento" button → adds empty card
+  │    └─ Trash button per talent to remove
+  │
+  ├─ Equipment Tab (EquipmentTab component)
+  │    ├─ Inline CRUD cards: name, category, equipped (checkbox), description
+  │    ├─ "Adicionar Item" button → adds empty card
+  │    └─ Trash button per item to remove
+  │
+  └─ Notes Tab
+       └─ Full-width textarea for freeform notes (+ combat logs appended here)
+
+Auto-save: All changes debounced (600ms) → PUT /api/characters/{name}
+Lock/Unlock: Fields disabled by default; click 🔒 to enable editing
+
+### Combat Mode
+A sandbox feature that snapshots the character before combat and fully restores them afterward.
+
+**Flow:**
+1. Click "Modo Combate" → deep clone of character saved as snapshot → fields unlocked
+2. During combat: take damage, cast spells, use fortune, spend gold freely
+3. Click "Encerrar Combate" → confirmation dialog appears
+4. On confirm: diff computed (damage, spells cast, fortune, gold, corruption, insanity)
+5. Combat log saved as markdown in the character's Notes field
+6. Character fully restored to pre-combat snapshot (notes updated with log)
+
+**State variables:**
+- `combatMode: boolean` — whether combat is active
+- `combatSnapshot: CharacterFull | null` — deep clone from before combat
+- `combatStartTime: Date | null` — for duration tracking
+- `showCombatConfirm: boolean` — end combat confirmation dialog
+
+**UI changes during combat:**
+- Red pulsing banner at top with ⚔️ icon
+- Lock button disabled (always unlocked during combat)
+- "Modo Combate" button changes to red "Encerrar Combate"
+- Outer container gets danger ring border
+- Back button warns before navigating away (discards combat)
+```
+
+Key sub-components used:
+- `SpellCard` (`components/cards/SpellCard.tsx`): Flippable card with front (name, tradition, rank badge) and back (description). Interactive mode shows casting tracker (click to cast, shows remaining).
+- `SpellPickerModal` (`components/modals/SpellPickerModal.tsx`): Full-screen modal with SpellDeck (search, filter by tradition/rank), multi-select, confirm to add to character.
+- `SpellDeck` (`components/cards/SpellDeck.tsx`): Filterable grid of SpellCards with search bar, tradition dropdown, and rank buttons.

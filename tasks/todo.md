@@ -127,21 +127,22 @@
 - [ ] Recording, pipeline, and narrator routers (FastAPI)
 - [ ] WebSocket for live audio levels
 
-### Phase 4: Card-Based Spells
-- [ ] SpellCard component (flip animation, rank badge, tradition color)
-- [ ] SpellDeck grid with filtering/search
-- [ ] SpellPickerModal for character sheet
-- [ ] React-query hooks for /api/spells
+### Phase 4: Card-Based Spells ✅
+- [x] SpellCard component (flip animation, rank badge, tradition color)
+- [x] SpellDeck grid with filtering/search
+- [x] SpellPickerModal for character sheet
+- [x] React-query hooks for /api/spells
 
 ### Phase 5: Card-Based Talents
 - [ ] TalentCard component
 - [ ] TalentDeck grid
 - [ ] TalentPickerModal for character sheet
 
-### Phase 6: Character Sheet (full port)
-- [ ] Character form with all SotDL fields
-- [ ] Spell/Talent card integration
+### Phase 6: Character Sheet (full port) ✅
+- [x] Character form with all SotDL fields (5 tabs: Stats, Spells, Talents, Equipment, Notes)
+- [x] Spell/Talent card integration (SpellPickerModal + inline CRUD)
 - [ ] Portrait upload
+- [x] Combat Mode (snapshot/restore sandbox for encounters + combat log in Notes)
 
 ### Phase 7: Remaining Pages (full port)
 - [ ] RecorderPage with live audio meters
