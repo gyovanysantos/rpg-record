@@ -1,6 +1,6 @@
 [package]
 name = "rpg-record-v2"
-version = "0.1.0"
+version = "0.5.0"
 description = "RPG Record - Session recorder and character manager for SotDL"
 authors = ["Gyova"]
 edition = "2021"
