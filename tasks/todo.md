@@ -43,6 +43,19 @@
 - [x] Test: UI launches at http://127.0.0.1:7860 ✓
 - [x] Test: full end-to-end pipeline ✓ (Record → Process → Transcribe → Merge → Summarize)
 
+## Phase 8: Desktop App v2 — Card UX Overhaul (feature/card-ux-overhaul)
+- [x] Test Tauri desktop build — fixed config issues, built successfully
+- [x] Add Invocations tab to CharacterSheetPage (card-style creature stat blocks)
+  - [x] Create InvocationCard.tsx (expandable card with difficulty color, stats grid)
+  - [x] Create InvocationEditorModal.tsx (template search from creatures.json + full form)
+  - [x] Create useCreatures.ts hook (fetch creature templates from backend)
+  - [x] Add creatures endpoint to game_data.py router
+  - [x] Add i18n translations (EN + PT-BR, 28 keys)
+  - [x] Integrate into CharacterSheetPage as 6th tab (between Talents and Equipment)
+  - [x] Vite build verified — zero errors (2030 modules)
+- [x] Update ARCHITECTURE.md with Invocations components
+- [ ] Add v1→v2 data migration safety constraint
+
 ## Review
 - All modules tested and working as of April 25, 2026
 - Full pipeline verified: Record → Process (64.9% silence stripped) → Transcribe (Groq) → Merge → Summarize (Claude)

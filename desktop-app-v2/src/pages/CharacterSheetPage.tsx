@@ -16,6 +16,7 @@ import {
   ScrollText,
   Plus,
   Trash2,
+  Flame,
 } from "lucide-react";
 import {
   useCharacter,
@@ -28,10 +29,13 @@ import {
   useMasterPaths,
 } from "../hooks/useGameData";
 import SpellCard from "../components/cards/SpellCard";
+import InvocationCard from "../components/cards/InvocationCard";
 import SpellPickerModal from "../components/modals/SpellPickerModal";
+import InvocationEditorModal from "../components/modals/InvocationEditorModal";
 import type { Spell, CharacterSpell } from "../hooks/useSpells";
+import type { Invocation } from "../hooks/useCreatures";
 
-type TabKey = "stats" | "spells" | "talents" | "equipment" | "notes";
+type TabKey = "stats" | "spells" | "talents" | "invocations" | "equipment" | "notes";
 
 /* ── Talent / Equipment interfaces ── */
 interface Talent {
@@ -61,6 +65,8 @@ export default function CharacterSheetPage() {
   const [locked, setLocked] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>("stats");
   const [spellPickerOpen, setSpellPickerOpen] = useState(false);
+  const [invocationEditorOpen, setInvocationEditorOpen] = useState(false);
+  const [editingInvocationIndex, setEditingInvocationIndex] = useState<number | null>(null);
   const [combatMode, setCombatMode] = useState(false);
   const [combatSnapshot, setCombatSnapshot] = useState<CharacterFull | null>(null);
   const [combatStartTime, setCombatStartTime] = useState<Date | null>(null);
@@ -206,6 +212,49 @@ export default function CharacterSheetPage() {
     [equipmentList, update]
   );
 
+  /* ── Invocation helpers ── */
+  const invocations = (char?.invocations ?? []) as unknown as Invocation[];
+
+  const handleAddInvocation = useCallback(
+    (inv: Invocation) => {
+      update({ invocations: [...invocations, inv] as unknown as Record<string, unknown>[] });
+    },
+    [invocations, update]
+  );
+
+  const handleUpdateInvocation = useCallback(
+    (index: number, inv: Invocation) => {
+      const updated = invocations.map((item, i) => (i === index ? inv : item));
+      update({ invocations: updated as unknown as Record<string, unknown>[] });
+    },
+    [invocations, update]
+  );
+
+  const handleRemoveInvocation = useCallback(
+    (index: number) => {
+      const filtered = invocations.filter((_, i) => i !== index);
+      update({ invocations: filtered as unknown as Record<string, unknown>[] });
+    },
+    [invocations, update]
+  );
+
+  const handleSaveInvocation = useCallback(
+    (inv: Invocation) => {
+      if (editingInvocationIndex !== null) {
+        handleUpdateInvocation(editingInvocationIndex, inv);
+      } else {
+        handleAddInvocation(inv);
+      }
+      setEditingInvocationIndex(null);
+    },
+    [editingInvocationIndex, handleUpdateInvocation, handleAddInvocation]
+  );
+
+  const handleEditInvocation = useCallback((index: number) => {
+    setEditingInvocationIndex(index);
+    setInvocationEditorOpen(true);
+  }, []);
+
   /* ── Combat Mode helpers ── */
   const handleEnterCombat = useCallback(() => {
     if (!char) return;
@@ -332,6 +381,7 @@ export default function CharacterSheetPage() {
     { key: "stats", label: t("characters.stats", "Stats"), icon: <Shield size={16} /> },
     { key: "spells", label: t("spells.title"), icon: <Sparkles size={16} />, count: charSpells.length },
     { key: "talents", label: t("talents.title"), icon: <Star size={16} />, count: talents.length },
+    { key: "invocations", label: t("invocations.title"), icon: <Flame size={16} />, count: invocations.length },
     { key: "equipment", label: t("characters.equipment"), icon: <Swords size={16} />, count: equipmentList.length },
     { key: "notes", label: t("characters.notes"), icon: <ScrollText size={16} /> },
   ];
@@ -524,6 +574,19 @@ export default function CharacterSheetPage() {
         />
       )}
 
+      {activeTab === "invocations" && (
+        <InvocationsTab
+          invocations={invocations}
+          onAdd={() => {
+            setEditingInvocationIndex(null);
+            setInvocationEditorOpen(true);
+          }}
+          onEdit={handleEditInvocation}
+          onRemove={handleRemoveInvocation}
+          t={t}
+        />
+      )}
+
       {activeTab === "equipment" && (
         <EquipmentTab
           equipment={equipmentList}
@@ -552,6 +615,17 @@ export default function CharacterSheetPage() {
         onClose={() => setSpellPickerOpen(false)}
         onConfirm={handleAddSpells}
         existingNames={existingSpellNames}
+      />
+
+      {/* Invocation Editor Modal */}
+      <InvocationEditorModal
+        open={invocationEditorOpen}
+        onClose={() => {
+          setInvocationEditorOpen(false);
+          setEditingInvocationIndex(null);
+        }}
+        onSave={handleSaveInvocation}
+        initial={editingInvocationIndex !== null ? invocations[editingInvocationIndex] : null}
       />
     </div>
   );
@@ -908,6 +982,53 @@ function EquipmentTab({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   INVOCATIONS TAB — Card-style grid of summoned creatures
+   ════════════════════════════════════════════════════════════════ */
+
+function InvocationsTab({
+  invocations,
+  onAdd,
+  onEdit,
+  onRemove,
+  t,
+}: {
+  invocations: Invocation[];
+  onAdd: () => void;
+  onEdit: (index: number) => void;
+  onRemove: (index: number) => void;
+  t: TFunction;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-text-muted text-sm">
+          {invocations.length === 0
+            ? t("invocations.noInvocations")
+            : `${invocations.length} ${invocations.length === 1 ? t("invocations.invocationSingular") : t("invocations.invocationPlural")}`}
+        </p>
+        <button onClick={onAdd} className="btn-primary flex items-center gap-2">
+          <Plus size={16} /> {t("invocations.addInvocation")}
+        </button>
+      </div>
+
+      {invocations.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {invocations.map((inv, i) => (
+            <InvocationCard
+              key={`${inv.name}-${i}`}
+              invocation={inv}
+              onEdit={() => onEdit(i)}
+              onDelete={() => onRemove(i)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

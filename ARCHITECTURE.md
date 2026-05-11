@@ -295,9 +295,11 @@ desktop-app-v2/
 │   ├── components/
 │   │   ├── cards/
 │   │   │   ├── SpellCard.tsx       ← Flippable spell card (front/back, cast tracker)
-│   │   │   └── SpellDeck.tsx       ← Filterable spell grid (search, tradition, rank)
+│   │   │   ├── SpellDeck.tsx       ← Filterable spell grid (search, tradition, rank)
+│   │   │   └── InvocationCard.tsx  ← Creature stat block card (expandable details)
 │   │   ├── modals/
-│   │   │   └── SpellPickerModal.tsx ← Modal to browse & pick spells from database
+│   │   │   ├── SpellPickerModal.tsx    ← Modal to browse & pick spells from database
+│   │   │   └── InvocationEditorModal.tsx ← Modal to create/edit invocations (with template search)
 │   │   └── layout/
 │   │       ├── RolePicker.tsx      ← DM/Player selection screen
 │   │       ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
@@ -305,7 +307,8 @@ desktop-app-v2/
 │   ├── hooks/
 │   │   ├── useCharacters.ts        ← CRUD hooks for characters (react-query)
 │   │   ├── useSpells.ts            ← Spell & tradition hooks (react-query)
-│   │   └── useGameData.ts          ← Ancestry, path, tradition hooks
+│   │   ├── useGameData.ts          ← Ancestry, path, tradition hooks
+│   │   └── useCreatures.ts         ← Creature template hooks for invocations
 │   └── pages/
 │       ├── DashboardPage.tsx       ← Stats + recent sessions
 │       ├── CharactersPage.tsx      ← Character list with create/delete
@@ -330,7 +333,7 @@ desktop-app-v2/
     └── routers/
         ├── characters.py       ← CRUD: GET/POST/PUT/DELETE /api/characters
         ├── spells.py           ← Read-only: GET /api/spells, /api/spells/traditions
-        ├── game_data.py        ← Read-only: ancestries, paths, traditions
+        ├── game_data.py        ← Read-only: ancestries, paths, traditions, creatures
         ├── sessions.py         ← List sessions, read transcripts/summaries
         └── settings.py         ← .env API key management (masked display)
 ```
@@ -377,10 +380,10 @@ React Component
 - Installs deps, runs PyInstaller, reports output path and size
 
 ### CharacterSheetPage — Tabbed Architecture
-The character sheet is the most complex page in the app, implemented with 5 tabs:
+The character sheet is the most complex page in the app, implemented with 6 tabs:
 
 ```
-CharacterSheetPage.tsx (~650 lines)
+CharacterSheetPage.tsx (~850 lines)
   │
   ├─ Header: [← Voltar] [Name] [Level · Ancestry] [⚔️ Modo Combate] [🔒 Lock/Unlock]
   │
@@ -390,7 +393,7 @@ CharacterSheetPage.tsx (~650 lines)
   ├─ Combat End Confirmation Dialog (modal overlay)
   │    └─ "Encerrar Combate?" → "Continuar Combate" / "Encerrar e Restaurar"
   │
-  ├─ Tab Bar: Stats | Magias | Talentos | Equipamento | Anotações
+  ├─ Tab Bar: Stats | Magias | Talentos | Invocações | Equipamento | Anotações
   │                    (badges show count when items exist)
   │
   ├─ Stats Tab
@@ -410,6 +413,18 @@ CharacterSheetPage.tsx (~650 lines)
   │    ├─ Inline CRUD cards: name, level (spinner), description
   │    ├─ "Adicionar Talento" button → adds empty card
   │    └─ Trash button per talent to remove
+  │
+  ├─ Invocations Tab (InvocationsTab component)
+  │    ├─ InvocationCard grid: creature stat blocks in card style
+  │    │    ├─ Header: name, difficulty badge (color-coded), type, size
+  │    │    ├─ Key stats row: HP, DEF, PER, SPD (colored icons)
+  │    │    ├─ Core attributes: STR, AGI, INT, WIL
+  │    │    ├─ Attack summary (truncated)
+  │    │    └─ Expandable details: traits, immunities, special attacks, description
+  │    ├─ "Adicionar Invocação" → opens InvocationEditorModal
+  │    │    ├─ Template search (from creatures.json database)
+  │    │    └─ Full stat block form (identity, attributes, combat stats, text fields)
+  │    └─ Edit/Delete buttons per invocation card
   │
   ├─ Equipment Tab (EquipmentTab component)
   │    ├─ Inline CRUD cards: name, category, equipped (checkbox), description
@@ -451,3 +466,26 @@ Key sub-components used:
 - `SpellCard` (`components/cards/SpellCard.tsx`): Flippable card with front (name, tradition, rank badge) and back (description). Interactive mode shows casting tracker (click to cast, shows remaining).
 - `SpellPickerModal` (`components/modals/SpellPickerModal.tsx`): Full-screen modal with SpellDeck (search, filter by tradition/rank), multi-select, confirm to add to character.
 - `SpellDeck` (`components/cards/SpellDeck.tsx`): Filterable grid of SpellCards with search bar, tradition dropdown, and rank buttons.
+- `InvocationCard` (`components/cards/InvocationCard.tsx`): Expandable creature stat block card. Header shows name, difficulty badge (color-coded by CR), creature type, and size. Key stats row (HP/DEF/PER/SPD), core attributes (STR/AGI/INT/WIL), attack summary. Expandable section for traits, immunities, special attacks, and description.
+- `InvocationEditorModal` (`components/modals/InvocationEditorModal.tsx`): Full-screen modal for creating/editing invocations. Includes template search (filters creatures.json database), identity fields, core + derived stat inputs, and text fields for attacks/traits/description.
+
+---
+
+## Data Migration Safety Constraint
+
+> **CRITICAL RULE**: v1 character data (`desktop-app/data/characters/*.json`) MUST always be loadable by v2 without data loss. This is a hard project constraint.
+
+### How It Works Today
+Both v1 (`desktop-app`) and v2 (`desktop-app-v2`) share the same `Character` dataclass in `app/models/character.py`. The `from_dict()` method provides backward compatibility:
+
+1. **Unknown keys are ignored**: `{k: v for k, v in data.items() if k in cls.__dataclass_fields__}` — so v1 files with fewer fields work fine.
+2. **Missing keys get defaults**: All dataclass fields have defaults (e.g., `invocations: list[dict] = field(default_factory=list)`), so old files without new fields load correctly.
+3. **Explicit migrations**: `from_dict()` converts old formats (e.g., `list[str]` talents → `list[dict]`).
+
+### Rules for Future Changes
+1. **Never remove a field** from the `Character` dataclass without a migration step in `from_dict()`.
+2. **Always add defaults** for new fields — old JSON files won't have them.
+3. **Never change a field's type** without adding migration logic in `from_dict()` to convert old data.
+4. **Test with real v1 data**: Load `desktop-app/data/characters/Zorath.json` after any schema change to verify no data loss.
+5. **The v2 `CharacterData` Pydantic model** (in `backend/routers/characters.py`) must stay in sync with the `Character` dataclass.
+6. **JSON files are the source of truth** — no database migrations, no schema versioning. The code must handle any historical format gracefully.
