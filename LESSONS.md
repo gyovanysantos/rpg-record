@@ -27,3 +27,10 @@ Patterns and mistakes to avoid, updated after corrections.
 - **sys.path manipulation in frozen mode**: Any `sys.path.insert()` calls for dev-mode imports must be wrapped in `if not getattr(sys, "frozen", False):` — otherwise they add nonexistent paths and can cause import failures.
 - **Don't exclude unittest**: `scipy → numpy.testing` requires `unittest`. Excluding it crashes the app at startup.
 - **Size optimization**: Exclude heavy packages not used at runtime (torch, tensorflow, pandas, boto3, sqlalchemy, numba, matplotlib, Pillow, gradio, uvicorn, opentelemetry, IPython, pytest, setuptools, pip, wheel, tkinter). Reduced .exe from 301MB → 110MB.
+
+## Data Migration (v1 → v2)
+
+- **Never break backward compatibility**: The `Character.from_dict()` method must always be able to load any historical JSON file without error or data loss. New fields need defaults; removed fields need migration logic.
+- **Add migration steps in `from_dict()`**: When changing a field's type or structure, add explicit conversion code (like the existing `list[str]` → `list[dict]` migration for talents/equipment).
+- **Verify with real data**: After any schema change, load `desktop-app/data/characters/Zorath.json` to confirm it still works.
+- **Keep models in sync**: The `Character` dataclass, `CharacterData` Pydantic model, and `CharacterFull` TypeScript interface must all agree on the character schema. A mismatch means data loss risk.

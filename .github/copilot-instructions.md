@@ -60,5 +60,14 @@ Core Principles
 - No Laziness: Find root causes. No temporary fixes. Senior developer standards.
 - Minimal Impact: Changes should only touch what's necessary. Avoid introducing bugs.
 
+## DATA MIGRATION SAFETY (HARD CONSTRAINT)
+When modifying the Character data model (Character dataclass, CharacterData Pydantic model, or CharacterFull TypeScript interface):
+- **NEVER** remove a field without adding migration logic in `from_dict()`
+- **ALWAYS** add default values for new fields so old JSON files load without error
+- **ALWAYS** keep the 3 schemas in sync: `Character` (Python dataclass), `CharacterData` (Pydantic), `CharacterFull` (TypeScript)
+- **VERIFY** by loading `desktop-app/data/characters/Zorath.json` after any schema change
+- See ARCHITECTURE.md "Data Migration Safety Constraint" for full rules
+- Minimal Impact: Changes should only touch what's necessary. Avoid introducing bugs.
+
 ## MEMORY PERSISTENCE
 CREATE A MEMORY.md to save project context so you pick up where you left off

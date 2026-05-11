@@ -228,4 +228,264 @@ Developer                           GitHub Actions
 
 ### Local Build
 - `scripts/build.ps1` — PowerShell script for local `.exe` builds
+
+---
+
+## Desktop App v2 (`desktop-app-v2/`) — Tauri + React + FastAPI
+
+A complete rewrite of the desktop app using a modern web-based stack while keeping all existing Python backend modules intact.
+
+### Architecture Overview
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Tauri v2 (Rust Shell)                       │
+│  - Native window management (1280x800, min 900x600)            │
+│  - Launches FastAPI as sidecar process                         │
+│  - File system access via Tauri APIs                           │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ hosts
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              React 18 + TypeScript + Vite Frontend              │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────────────┐   │
+│  │ zustand  │ │ i18next  │ │ framer-  │ │ @tanstack/      │   │
+│  │ (state)  │ │ (PT/EN)  │ │ motion   │ │ react-query     │   │
+│  └──────────┘ └──────────┘ └──────────┘ └─────────────────┘   │
+│  TailwindCSS dark fantasy theme (gold + midnight blue)         │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ HTTP REST + WebSocket
+                         │ /api → localhost:8420
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              FastAPI Backend (localhost:8420)                    │
+│  ┌────────────┐ ┌────────┐ ┌───────────┐ ┌──────────────────┐ │
+│  │ characters │ │ spells │ │ game_data │ │   sessions       │ │
+│  │   router   │ │ router │ │  router   │ │   router         │ │
+│  └────────────┘ └────────┘ └───────────┘ └──────────────────┘ │
+│  ┌────────────┐                                                │
+│  │  settings  │  (Phase 3: recording, pipeline, narrator)      │
+│  │   router   │                                                │
+│  └────────────┘                                                │
+│  Imports existing Python modules: recorder, processor,         │
+│  transcriber, merger, summarizer, config                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Folder Structure
+```
+desktop-app-v2/
+├── package.json                ← React + Tauri deps
+├── vite.config.ts              ← Dev proxy /api→8420, /ws→ws://8420
+├── tailwind.config.js          ← Dark fantasy theme + custom animations
+├── index.html                  ← Entry point (lang="pt-BR")
+├── src/
+│   ├── main.tsx                ← React root: QueryClient, BrowserRouter, i18n
+│   ├── App.tsx                 ← RolePicker gate → AppLayout with Routes
+│   ├── i18n.ts                 ← react-i18next config (PT-BR default)
+│   ├── index.css               ← Tailwind + custom component classes
+│   ├── stores/
+│   │   └── appStore.ts         ← zustand: role, sidebar state
+│   ├── locales/
+│   │   ├── pt-BR.json          ← Portuguese translation (~200 keys)
+│   │   └── en.json             ← English translation
+│   ├── components/layout/
+│   │   ├── RolePicker.tsx      ← DM/Player selection screen
+│   │   ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
+│   │   └── AppLayout.tsx       ← Sidebar + animated page container
+│   ├── components/
+│   │   ├── cards/
+│   │   │   ├── SpellCard.tsx       ← Flippable spell card (front/back, cast tracker)
+│   │   │   ├── SpellDeck.tsx       ← Filterable spell grid (search, tradition, rank)
+│   │   │   └── InvocationCard.tsx  ← Creature stat block card (expandable details)
+│   │   ├── modals/
+│   │   │   ├── SpellPickerModal.tsx    ← Modal to browse & pick spells from database
+│   │   │   └── InvocationEditorModal.tsx ← Modal to create/edit invocations (with template search)
+│   │   └── layout/
+│   │       ├── RolePicker.tsx      ← DM/Player selection screen
+│   │       ├── Sidebar.tsx         ← Collapsible nav, role-aware filtering
+│   │       └── AppLayout.tsx       ← Sidebar + animated page container
+│   ├── hooks/
+│   │   ├── useCharacters.ts        ← CRUD hooks for characters (react-query)
+│   │   ├── useSpells.ts            ← Spell & tradition hooks (react-query)
+│   │   ├── useGameData.ts          ← Ancestry, path, tradition hooks
+│   │   └── useCreatures.ts         ← Creature template hooks for invocations
+│   └── pages/
+│       ├── DashboardPage.tsx       ← Stats + recent sessions
+│       ├── CharactersPage.tsx      ← Character list with create/delete
+│       ├── CharacterSheetPage.tsx  ← Full tabbed character editor (see below)
+│       ├── SpellsPage.tsx          ← Spell database browser (SpellDeck)
+│       ├── TalentsPage.tsx         ← Talent cards (stub)
+│       ├── DicePage.tsx            ← d20 + boons/banes roller (functional)
+│       ├── InitiativePage.tsx      ← Fast/slow turn tracker (stub)
+│       ├── RecorderPage.tsx        ← Audio recording (stub, DM only)
+│       ├── TranscriptsPage.tsx     ← Transcript viewer (stub, DM only)
+│       ├── NarratorPage.tsx        ← TTS narration (stub, DM only)
+│       └── SettingsPage.tsx        ← Language + API keys (functional)
+├── src-tauri/
+│   ├── Cargo.toml              ← tauri 2 + shell plugin
+│   ├── tauri.conf.json         ← Window config, dev server 1420
+│   └── src/
+│       ├── lib.rs              ← Tauri builder with shell plugin
+│       └── main.rs             ← Windows entry point
+└── backend/
+    ├── main.py                 ← FastAPI app, CORS, router imports
+    ├── requirements.txt        ← fastapi, uvicorn, pydantic, dotenv
+    └── routers/
+        ├── characters.py       ← CRUD: GET/POST/PUT/DELETE /api/characters
+        ├── spells.py           ← Read-only: GET /api/spells, /api/spells/traditions
+        ├── game_data.py        ← Read-only: ancestries, paths, traditions, creatures
+        ├── sessions.py         ← List sessions, read transcripts/summaries
+        └── settings.py         ← .env API key management (masked display)
+```
+
+### Communication Flow
+```
+React Component
+  │
+  ├─ useQuery / useMutation (@tanstack/react-query)
+  │     │
+  │     ▼
+  │   fetch('/api/characters')  ← Vite dev proxy in dev mode
+  │     │
+  │     ▼
+  │   FastAPI Router (localhost:8420)
+  │     │
+  │     ▼
+  │   Existing Python module (character.py, etc.)
+  │     │
+  │     ▼
+  │   JSON file on disk (data/characters/*.json)
+  │
+  └─ zustand store (local UI state: role, sidebar)
+```
+
+### i18n Strategy
+- **UI strings**: Translated via react-i18next (`t('sidebar.spells')`)
+- **Game data**: Stays in Portuguese (from the SotDL book in PT-BR)
+- **Default language**: PT-BR, switchable to EN in Settings
+- **Persistence**: Stored in `localStorage`
+
+### Color Palette
+| Token    | Hex       | Usage                    |
+|----------|-----------|--------------------------|
+| bg       | `#1a1a2e` | Page background          |
+| surface  | `#16213e` | Cards, panels            |
+| card     | `#0f3460` | Elevated cards           |
+| accent   | `#c4a35a` | Gold highlights, buttons |
+| text     | `#e0d6c8` | Primary text             |
+| muted    | `#8a7e6b` | Secondary text           |
+| danger   | `#8b0000` | Delete, errors           |
+| success  | `#2e5e3e` | Confirm, online status   |
+| border   | `#2a2a4a` | Dividers, outlines       |
 - Installs deps, runs PyInstaller, reports output path and size
+
+### CharacterSheetPage — Tabbed Architecture
+The character sheet is the most complex page in the app, implemented with 6 tabs:
+
+```
+CharacterSheetPage.tsx (~850 lines)
+  │
+  ├─ Header: [← Voltar] [Name] [Level · Ancestry] [⚔️ Modo Combate] [🔒 Lock/Unlock]
+  │
+  ├─ Combat Mode Banner (visible when combat active)
+  │    └─ Red pulsing banner: "⚔️ COMBATE ATIVO" with restore message
+  │
+  ├─ Combat End Confirmation Dialog (modal overlay)
+  │    └─ "Encerrar Combate?" → "Continuar Combate" / "Encerrar e Restaurar"
+  │
+  ├─ Tab Bar: Stats | Magias | Talentos | Invocações | Equipamento | Anotações
+  │                    (badges show count when items exist)
+  │
+  ├─ Stats Tab
+  │    ├─ Identity: Name, Level, Ancestry, Size, Novice/Expert/Master paths
+  │    ├─ Attributes: Strength, Agility, Intellect, Will (with modifier calc)
+  │    ├─ Health: HP bar, damage, healing rate, bonus
+  │    ├─ Combat: Defense, Speed, Perception (icon cards + bonus fields)
+  │    ├─ Secondary: Power, Corruption, Insanity, Fortune (checkbox), Gold
+  │    └─ Languages & Professions
+  │
+  ├─ Spells Tab (SpellsTab component)
+  │    ├─ SpellCard grid (interactive: cast/track castings per spell)
+  │    ├─ "Adicionar Magia" → opens SpellPickerModal
+  │    └─ Trash button per spell to remove from deck
+  │
+  ├─ Talents Tab (TalentsTab component)
+  │    ├─ Inline CRUD cards: name, level (spinner), description
+  │    ├─ "Adicionar Talento" button → adds empty card
+  │    └─ Trash button per talent to remove
+  │
+  ├─ Invocations Tab (InvocationsTab component)
+  │    ├─ InvocationCard grid: creature stat blocks in card style
+  │    │    ├─ Header: name, difficulty badge (color-coded), type, size
+  │    │    ├─ Key stats row: HP, DEF, PER, SPD (colored icons)
+  │    │    ├─ Core attributes: STR, AGI, INT, WIL
+  │    │    ├─ Attack summary (truncated)
+  │    │    └─ Expandable details: traits, immunities, special attacks, description
+  │    ├─ "Adicionar Invocação" → opens InvocationEditorModal
+  │    │    ├─ Template search (from creatures.json database)
+  │    │    └─ Full stat block form (identity, attributes, combat stats, text fields)
+  │    └─ Edit/Delete buttons per invocation card
+  │
+  ├─ Equipment Tab (EquipmentTab component)
+  │    ├─ Inline CRUD cards: name, category, equipped (checkbox), description
+  │    ├─ "Adicionar Item" button → adds empty card
+  │    └─ Trash button per item to remove
+  │
+  └─ Notes Tab
+       └─ Full-width textarea for freeform notes (+ combat logs appended here)
+
+Auto-save: All changes debounced (600ms) → PUT /api/characters/{name}
+Lock/Unlock: Fields disabled by default; click 🔒 to enable editing
+
+### Combat Mode
+A sandbox feature that snapshots the character before combat and fully restores them afterward.
+
+**Flow:**
+1. Click "Modo Combate" → deep clone of character saved as snapshot → fields unlocked
+2. During combat: take damage, cast spells, use fortune, spend gold freely
+3. Click "Encerrar Combate" → confirmation dialog appears
+4. On confirm: diff computed (damage, spells cast, fortune, gold, corruption, insanity)
+5. Combat log saved as markdown in the character's Notes field
+6. Character fully restored to pre-combat snapshot (notes updated with log)
+
+**State variables:**
+- `combatMode: boolean` — whether combat is active
+- `combatSnapshot: CharacterFull | null` — deep clone from before combat
+- `combatStartTime: Date | null` — for duration tracking
+- `showCombatConfirm: boolean` — end combat confirmation dialog
+
+**UI changes during combat:**
+- Red pulsing banner at top with ⚔️ icon
+- Lock button disabled (always unlocked during combat)
+- "Modo Combate" button changes to red "Encerrar Combate"
+- Outer container gets danger ring border
+- Back button warns before navigating away (discards combat)
+```
+
+Key sub-components used:
+- `SpellCard` (`components/cards/SpellCard.tsx`): Flippable card with front (name, tradition, rank badge) and back (description). Interactive mode shows casting tracker (click to cast, shows remaining).
+- `SpellPickerModal` (`components/modals/SpellPickerModal.tsx`): Full-screen modal with SpellDeck (search, filter by tradition/rank), multi-select, confirm to add to character.
+- `SpellDeck` (`components/cards/SpellDeck.tsx`): Filterable grid of SpellCards with search bar, tradition dropdown, and rank buttons.
+- `InvocationCard` (`components/cards/InvocationCard.tsx`): Expandable creature stat block card. Header shows name, difficulty badge (color-coded by CR), creature type, and size. Key stats row (HP/DEF/PER/SPD), core attributes (STR/AGI/INT/WIL), attack summary. Expandable section for traits, immunities, special attacks, and description.
+- `InvocationEditorModal` (`components/modals/InvocationEditorModal.tsx`): Full-screen modal for creating/editing invocations. Includes template search (filters creatures.json database), identity fields, core + derived stat inputs, and text fields for attacks/traits/description.
+
+---
+
+## Data Migration Safety Constraint
+
+> **CRITICAL RULE**: v1 character data (`desktop-app/data/characters/*.json`) MUST always be loadable by v2 without data loss. This is a hard project constraint.
+
+### How It Works Today
+Both v1 (`desktop-app`) and v2 (`desktop-app-v2`) share the same `Character` dataclass in `app/models/character.py`. The `from_dict()` method provides backward compatibility:
+
+1. **Unknown keys are ignored**: `{k: v for k, v in data.items() if k in cls.__dataclass_fields__}` — so v1 files with fewer fields work fine.
+2. **Missing keys get defaults**: All dataclass fields have defaults (e.g., `invocations: list[dict] = field(default_factory=list)`), so old files without new fields load correctly.
+3. **Explicit migrations**: `from_dict()` converts old formats (e.g., `list[str]` talents → `list[dict]`).
+
+### Rules for Future Changes
+1. **Never remove a field** from the `Character` dataclass without a migration step in `from_dict()`.
+2. **Always add defaults** for new fields — old JSON files won't have them.
+3. **Never change a field's type** without adding migration logic in `from_dict()` to convert old data.
+4. **Test with real v1 data**: Load `desktop-app/data/characters/Zorath.json` after any schema change to verify no data loss.
+5. **The v2 `CharacterData` Pydantic model** (in `backend/routers/characters.py`) must stay in sync with the `Character` dataclass.
+6. **JSON files are the source of truth** — no database migrations, no schema versioning. The code must handle any historical format gracefully.

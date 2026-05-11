@@ -36,3 +36,10 @@ build/
 
 # User data (generated at runtime)
 desktop-app/data/characters/
+
+# Tauri / Rust build artifacts
+desktop-app-v2/src-tauri/target/
+desktop-app-v2/src-tauri/gen/
+
+# Node modules
+node_modules/

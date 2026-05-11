@@ -43,6 +43,19 @@
 - [x] Test: UI launches at http://127.0.0.1:7860 ✓
 - [x] Test: full end-to-end pipeline ✓ (Record → Process → Transcribe → Merge → Summarize)
 
+## Phase 8: Desktop App v2 — Card UX Overhaul (feature/card-ux-overhaul)
+- [x] Test Tauri desktop build — fixed config issues, built successfully
+- [x] Add Invocations tab to CharacterSheetPage (card-style creature stat blocks)
+  - [x] Create InvocationCard.tsx (expandable card with difficulty color, stats grid)
+  - [x] Create InvocationEditorModal.tsx (template search from creatures.json + full form)
+  - [x] Create useCreatures.ts hook (fetch creature templates from backend)
+  - [x] Add creatures endpoint to game_data.py router
+  - [x] Add i18n translations (EN + PT-BR, 28 keys)
+  - [x] Integrate into CharacterSheetPage as 6th tab (between Talents and Equipment)
+  - [x] Vite build verified — zero errors (2030 modules)
+- [x] Update ARCHITECTURE.md with Invocations components
+- [ ] Add v1→v2 data migration safety constraint
+
 ## Review
 - All modules tested and working as of April 25, 2026
 - Full pipeline verified: Record → Process (64.9% silence stripped) → Transcribe (Groq) → Merge → Summarize (Claude)
@@ -96,3 +109,61 @@
 ## Desktop App — Phase 8: Polish & Packaging
 - [ ] PyInstaller .exe build
 - [ ] Icon, splash screen, final polish
+
+---
+
+## Desktop App v2 — Tauri + React Migration
+
+### Phase 0: Game Data Updates ✅
+- [x] Add 11 Primal (Primitiva) spells to `spells.json` (34 traditions total)
+- [x] Add "Primal" to `game_data.json` spell_traditions array
+
+### Phase 1: Project Scaffold ✅
+- [x] Create `desktop-app-v2/` with package.json, vite.config.ts, tailwind.config.js
+- [x] Create Tauri config (Cargo.toml, tauri.conf.json, lib.rs, main.rs)
+- [x] Create React entry (main.tsx, App.tsx, index.css, vite-env.d.ts)
+- [x] Create i18n setup (i18n.ts, pt-BR.json, en.json)
+- [x] Create zustand store (appStore.ts)
+- [x] Create layout components (RolePicker, Sidebar, AppLayout)
+- [x] Create all page stubs (Dashboard, Characters, Spells, Talents, Dice, Initiative, Recorder, Transcripts, Narrator, Settings)
+- [x] Create FastAPI backend (main.py + 5 routers: characters, spells, game_data, sessions, settings)
+- [x] Update ARCHITECTURE.md and TECH-STACK.md
+
+### Phase 2: Setup & Verify (user action needed)
+- [ ] `git checkout -b feature/card-ux-overhaul`
+- [ ] `cd desktop-app-v2 && npm install`
+- [ ] `cd backend && pip install -r requirements.txt`
+- [ ] Verify frontend runs: `npm run dev`
+- [ ] Verify backend runs: `uvicorn backend.main:app --port 8420`
+
+### Phase 3: Core Functionality
+- [ ] Recording, pipeline, and narrator routers (FastAPI)
+- [ ] WebSocket for live audio levels
+
+### Phase 4: Card-Based Spells ✅
+- [x] SpellCard component (flip animation, rank badge, tradition color)
+- [x] SpellDeck grid with filtering/search
+- [x] SpellPickerModal for character sheet
+- [x] React-query hooks for /api/spells
+
+### Phase 5: Card-Based Talents
+- [ ] TalentCard component
+- [ ] TalentDeck grid
+- [ ] TalentPickerModal for character sheet
+
+### Phase 6: Character Sheet (full port) ✅
+- [x] Character form with all SotDL fields (5 tabs: Stats, Spells, Talents, Equipment, Notes)
+- [x] Spell/Talent card integration (SpellPickerModal + inline CRUD)
+- [ ] Portrait upload
+- [x] Combat Mode (snapshot/restore sandbox for encounters + combat log in Notes)
+
+### Phase 7: Remaining Pages (full port)
+- [ ] RecorderPage with live audio meters
+- [ ] TranscriptsPage with search + export
+- [ ] NarratorPage with voice selection + audio player
+- [ ] DashboardPage with live data from API
+
+### Phase 8: Distribution
+- [ ] Tauri build (.exe)
+- [ ] FastAPI sidecar packaging
+- [ ] Installer / auto-update

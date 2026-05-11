@@ -61,3 +61,49 @@
 
 ## urllib (stdlib)
 **Why:** Used in `update_checker.py` to fetch a remote `version.json` from a public GitHub Gist. No external HTTP library needed — stdlib keeps the dependency count low.
+
+---
+
+# Desktop App v2 — Tauri + React Stack
+
+## Tauri v2 (Rust)
+**Why:** Lightweight alternative to Electron. Uses the OS webview instead of bundling Chromium, resulting in ~10MB executables vs ~150MB for Electron. Native feel, low memory usage, Rust security. The shell plugin launches the FastAPI Python backend as a sidecar.
+
+## React 18.3
+**Why:** Component-based UI library. Industry standard, massive ecosystem, declarative rendering. Chosen over Vue/Svelte for broader community support and library availability (react-query, framer-motion, etc.).
+
+## TypeScript 5.6
+**Why:** Static typing for JavaScript. Catches bugs at compile time, better IDE support, self-documenting code. Essential for a project this size.
+
+## Vite 6
+**Why:** Next-gen frontend build tool. Sub-second HMR (hot module replacement), native ES modules in dev, fast production builds. Replaces webpack/CRA. Built-in proxy for routing `/api` calls to the FastAPI backend during development.
+
+## TailwindCSS 3.4
+**Why:** Utility-first CSS framework. Rapid prototyping with dark fantasy theme via custom color tokens. No separate CSS files needed — styles live in the component markup. Custom animations (card-flip, fade-in, glow) defined in config.
+
+## zustand 5
+**Why:** Minimal state management (1KB). Simpler than Redux, no boilerplate. Stores role selection and sidebar state with `persist` middleware for localStorage persistence.
+
+## @tanstack/react-query 5
+**Why:** Server state management. Handles caching, background refetching, loading/error states for all FastAPI calls. Eliminates manual `useEffect` + `useState` fetch patterns.
+
+## framer-motion 11
+**Why:** Production-ready animation library for React. Powers page transitions (fade+slide), card hover effects, and the dice roller animation. Declarative API with `AnimatePresence` for exit animations.
+
+## react-i18next 15 + i18next 24
+**Why:** Internationalization framework. The app defaults to PT-BR (user's language) with English toggle. Translation keys stored in JSON files (`locales/pt-BR.json`, `locales/en.json`). Language persisted in localStorage.
+
+## lucide-react 0.460
+**Why:** Modern icon set (1000+ icons). Consistent style, tree-shakeable (only imports used icons). Replaces icon fonts — each icon is an optimized SVG React component.
+
+## react-router-dom 7
+**Why:** Client-side routing for the SPA. Maps URL paths to page components. Supports role-based route filtering (DM-only pages like recorder, transcripts, narrator).
+
+## FastAPI 0.115+
+**Why:** Modern async Python web framework for the backend API. Auto-generates OpenAPI docs, Pydantic validation, async support. Wraps all existing Python modules (character, config, recorder, etc.) with REST endpoints. Runs on `localhost:8420`.
+
+## uvicorn 0.34+
+**Why:** ASGI server for FastAPI. Production-grade, async, fast startup. Launched by Tauri as a sidecar process.
+
+## Pydantic 2.x
+**Why:** Data validation for FastAPI request/response models. Ensures type safety at the API boundary. Used in all router files for request body validation.
